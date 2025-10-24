@@ -12,7 +12,7 @@ export const useDockerServices = () => {
   const intervalRef = useRef(null);
   const isMountedRef = useRef(true);
   const cacheRef = useRef({ data: null, timestamp: 0 });
-  const CACHE_DURATION = 5000; // 5 segundos de cache
+  const CACHE_DURATION = 2000; // 2 segundos de cache (mais agressivo)
 
   const fetchServices = useCallback(async (forceRefresh = false) => {
     if (!isMountedRef.current) return;
@@ -74,13 +74,13 @@ export const useDockerServices = () => {
     }
   }, []);
 
-  // Polling automático a cada 8 segundos
+  // Polling automático a cada 5 segundos (mais frequente)
   const startPolling = useCallback(() => {
     if (intervalRef.current) return;
     
     intervalRef.current = setInterval(() => {
       fetchServices(false); // Não mostrar loading no polling
-    }, 8000);
+    }, 5000);
   }, [fetchServices]);
 
   const stopPolling = useCallback(() => {

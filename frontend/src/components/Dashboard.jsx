@@ -44,6 +44,7 @@ const Dashboard = ({ onLogout }) => {
   const generalStats = getGeneralStats();
 
   const handleRefresh = () => {
+    // Refresh forçado sem loading visual
     refetchServices();
   };
 
@@ -52,7 +53,7 @@ const Dashboard = ({ onLogout }) => {
     console.log('Testando notificação...');
   };
 
-  if (servicesLoading) {
+  if (servicesLoading && services.length === 0) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">

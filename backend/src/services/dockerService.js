@@ -9,8 +9,9 @@ class DockerService {
     this.cache = {
       services: null,
       timestamp: 0,
-      duration: 3000 // 3 segundos de cache
+      duration: 1000 // 1 segundo de cache (muito mais agressivo)
     };
+    this.serviceCache = new Map(); // Cache para detalhes de serviços
   }
   
   /**
@@ -61,12 +62,25 @@ class DockerService {
    */
   async getServiceById(serviceId) {
     try {
+      const now = Date.now();
+      const cacheKey = `service_${serviceId}`;
+      
+      // Verificar cache do serviço
+      if (this.serviceCache.has(cacheKey)) {
+        const cached = this.serviceCache.get(cacheKey);
+        if ((now - cached.timestamp) < 2000) { // 2 segundos de cache
+          console.log(`📋 Retornando serviço ${serviceId} do cache`);
+          return cached.data;
+        }
+      }
+
+      console.log(`📋 Buscando detalhes do serviço: ${serviceId}`);
       const service = await docker.getService(serviceId).inspect();
       
       // Buscar containers relacionados ao serviço
       const containers = await this.getContainersByService(service.Spec.Name);
       
-      return {
+      const serviceData = {
         id: service.ID,
         name: service.Spec.Name,
         image: service.Spec.TaskTemplate.ContainerSpec.Image,
@@ -79,6 +93,15 @@ class DockerService {
         version: service.Version.Index,
         containers: containers
       };
+
+      // Atualizar cache
+      this.serviceCache.set(cacheKey, {
+        data: serviceData,
+        timestamp: now
+      });
+
+      console.log(`✅ Serviço ${serviceId} carregado com ${containers.length} containers`);
+      return serviceData;
     } catch (error) {
       console.error('Erro ao obter serviço:', error);
       throw new Error('Serviço não encontrado');

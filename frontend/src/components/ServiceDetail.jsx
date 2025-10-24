@@ -34,27 +34,31 @@ const ServiceDetail = ({ onLogout }) => {
   const [showLogsModal, setShowLogsModal] = useState(false);
 
   useEffect(() => {
-    const fetchService = async () => {
+    const fetchService = async (showLoading = true) => {
       try {
-        setLoading(true);
-        setError(null);
+        if (showLoading) {
+          setLoading(true);
+          setError(null);
+        }
         const serviceData = await getServiceById(id);
         setService(serviceData);
       } catch (err) {
         setError(err);
         console.error('Erro ao buscar serviço:', err);
       } finally {
-        setLoading(false);
+        if (showLoading) {
+          setLoading(false);
+        }
       }
     };
 
     if (id) {
-      fetchService();
+      fetchService(true); // Primeira carga com loading
       
-      // Polling automático para atualizar dados do serviço a cada 10 segundos
+      // Polling automático mais frequente (sem loading)
       const interval = setInterval(() => {
-        fetchService();
-      }, 10000);
+        fetchService(false);
+      }, 8000);
 
       return () => clearInterval(interval);
     }
