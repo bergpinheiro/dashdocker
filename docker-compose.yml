@@ -52,7 +52,7 @@ services:
   dashdocker-agent:
     build:
       context: ./agent
-      dockerfile: Dockerfile.agent
+      dockerfile: Dockerfile
     environment:
       - BACKEND_URL=ws://dashdocker:3001
       - NODE_NAME=localhost
