@@ -64,12 +64,37 @@ export const useDockerServices = () => {
     try {
       setError(null);
       
-      const response = await apiEndpoints.services.getById(serviceId);
-      return response.data.data;
+      // Buscar container por ID nos dados agregados
+      const response = await apiEndpoints.cluster.containers();
+      const containers = response.data.data || [];
+      
+      // Encontrar container pelo ID
+      const container = containers.find(c => c.id === serviceId);
+      
+      if (!container) {
+        throw new Error('Container não encontrado');
+      }
+      
+      // Retornar no formato esperado pelo frontend
+      return {
+        id: container.id,
+        name: container.name,
+        image: container.image,
+        status: container.status,
+        statusColor: container.statusColor,
+        uptime: container.uptime,
+        ports: container.ports,
+        createdAt: container.createdAt,
+        command: container.command,
+        labels: container.labels,
+        nodeId: container.nodeId,
+        nodeName: container.nodeName,
+        containers: [container] // Para compatibilidade
+      };
     } catch (err) {
       const errorData = handleApiError(err);
       setError(errorData);
-      console.error('Erro ao buscar serviço:', errorData);
+      console.error('Erro ao buscar container:', errorData);
       throw errorData;
     }
   }, []);

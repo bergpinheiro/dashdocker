@@ -147,6 +147,12 @@ agentsNamespace.on('connection', (socket) => {
   
   // Receber dados do agent
   socket.on('agent:data', (data) => {
+    console.log(`📥 Recebido dados do agent ${socket.nodeId}:`, {
+      containers: data.containers?.length || 0,
+      stats: Object.keys(data.stats || {}).length,
+      events: data.events?.length || 0
+    });
+    
     if (socket.nodeId) {
       // Atualizar dados no agregador
       aggregatorService.updateNodeData(socket.nodeId, data);
@@ -158,6 +164,8 @@ agentsNamespace.on('connection', (socket) => {
         containers: data.containers.length,
         stats: Object.keys(data.stats).length
       });
+      
+      console.log(`📤 Broadcast enviado para frontend: ${data.containers.length} containers`);
     }
   });
   
