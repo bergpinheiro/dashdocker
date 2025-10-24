@@ -22,8 +22,8 @@ class EventService {
 
     try {
       this.eventStream = docker.getEvents({
-        since: Math.floor(Date.now() / 1000),
-        until: 0
+        since: Math.floor(Date.now() / 1000) - 60 // 1 minuto atrás
+        // Removido 'until' para stream contínuo
       }, (err, stream) => {
         if (err) {
           console.error('Erro no stream de eventos:', err);
