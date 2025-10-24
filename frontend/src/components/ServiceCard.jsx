@@ -33,27 +33,18 @@ const ServiceCard = ({ service, stats = null }) => {
       stats.reduce((sum, s) => sum + (s.memory?.usageMB || 0), 0) : 0,
   };
 
-  // Determinar cor do card baseado no status
+  // Determinar cor do card baseado no status do container
   const getCardColor = () => {
-    if (serviceStats.runningContainers === 0) return 'border-danger-500 bg-danger-900/20';
-    if (serviceStats.runningContainers < serviceStats.totalContainers) return 'border-warning-500 bg-warning-900/20';
-    return 'border-success-500 bg-success-900/20';
-  };
-
-  // Determinar status geral
-  const getOverallStatus = () => {
-    if (serviceStats.totalContainers === 0) return 'Sem containers';
-    if (serviceStats.runningContainers === 0) return 'Parado';
-    if (serviceStats.runningContainers < serviceStats.totalContainers) return 'Parcial';
-    return 'Executando';
+    if (container.status === 'running') return 'border-success-500 bg-success-900/20';
+    if (container.status === 'exited' || container.status === 'dead') return 'border-danger-500 bg-danger-900/20';
+    return 'border-warning-500 bg-warning-900/20';
   };
 
   // Determinar cor do status
   const getStatusColor = () => {
-    if (serviceStats.totalContainers === 0) return 'text-gray-400';
-    if (serviceStats.runningContainers === 0) return 'text-danger-400';
-    if (serviceStats.runningContainers < serviceStats.totalContainers) return 'text-warning-400';
-    return 'text-success-400';
+    if (container.status === 'running') return 'text-success-400';
+    if (container.status === 'exited' || container.status === 'dead') return 'text-danger-400';
+    return 'text-warning-400';
   };
 
   const handleClick = () => {
@@ -72,26 +63,29 @@ const ServiceCard = ({ service, stats = null }) => {
       onClick={handleClick}
     >
       <div className="card-header">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary-600 rounded-lg">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            <div className="p-2 bg-primary-600 rounded-lg flex-shrink-0">
               <Server className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-white truncate">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold text-white truncate" title={container.name}>
                 {container.name}
               </h3>
-              <div className="flex items-center gap-2 flex-wrap">
-                <p className={`text-sm ${getStatusColor()}`}>
-                  {container.status} • {container.image}
+              <div className="flex items-center gap-2 flex-wrap mt-1">
+                <p className={`text-sm ${getStatusColor()} truncate`} title={`${container.status} • ${container.image}`}>
+                  {container.status}
                 </p>
-                <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded-full">
+                <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded-full flex-shrink-0">
                   {nodeName}
                 </span>
               </div>
+              <p className="text-xs text-gray-400 truncate mt-1" title={container.image}>
+                {container.image}
+              </p>
             </div>
           </div>
-          <ExternalLink className="w-4 h-4 text-gray-400" />
+          <ExternalLink className="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" />
         </div>
       </div>
 
@@ -101,7 +95,7 @@ const ServiceCard = ({ service, stats = null }) => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-xs text-gray-400 uppercase tracking-wide">Imagem</p>
-              <p className="text-sm text-white truncate" title={container.image}>
+              <p className="text-sm text-white truncate max-w-48" title={container.image}>
                 {container.image}
               </p>
             </div>

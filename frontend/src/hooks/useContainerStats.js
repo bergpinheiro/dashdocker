@@ -17,7 +17,7 @@ export const useContainerStats = () => {
   const loadInitialStats = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await apiEndpoints.containers.getAllStats();
+      const response = await apiEndpoints.cluster.containers();
       if (response.data.success) {
         setStats(response.data.data);
         console.log('📊 Stats iniciais carregados:', response.data.data.length);
