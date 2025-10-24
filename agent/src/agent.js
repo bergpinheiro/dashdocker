@@ -43,10 +43,11 @@ class DashDockerAgent {
       this.socket = io(this.backendUrl, {
         path: '/socket.io',
         transports: ['websocket'],
-        timeout: 10000,
+        timeout: 30000,
         reconnection: true,
-        reconnectionDelay: 5000,
-        reconnectionAttempts: Infinity
+        reconnectionDelay: 10000,
+        reconnectionAttempts: Infinity,
+        forceNew: true
       });
 
       this.socket.on('connect', () => {
@@ -69,13 +70,26 @@ class DashDockerAgent {
 
       this.socket.on('connect_error', (error) => {
         console.error('❌ Erro de conexão:', error.message);
-        reject(error);
+        // Não rejeitar imediatamente, deixar o sistema de reconexão funcionar
+        console.log('🔄 Tentando reconectar em 10 segundos...');
       });
 
       this.socket.on('reconnect', (attemptNumber) => {
         console.log(`🔄 Reconectado após ${attemptNumber} tentativas`);
         this.isConnected = true;
       });
+
+      this.socket.on('reconnect_attempt', (attemptNumber) => {
+        console.log(`🔄 Tentativa de reconexão ${attemptNumber}...`);
+      });
+
+      // Timeout para resolver a promise
+      setTimeout(() => {
+        if (!this.isConnected) {
+          console.log('⏰ Timeout de conexão, mas continuando com reconexão automática...');
+          resolve(); // Resolver para não travar o agent
+        }
+      }, 30000);
     });
   }
 
