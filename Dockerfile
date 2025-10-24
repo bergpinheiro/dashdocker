@@ -19,7 +19,7 @@ FROM node:18-alpine AS production
 WORKDIR /app
 
 # Instalar nginx e dependências necessárias
-RUN apk add --no-cache nginx-light && \
+RUN apk add --no-cache nginx && \
     rm -rf /var/cache/apk/*
 
 # Copiar dependências do backend
