@@ -8,14 +8,16 @@ const dockerService = require('../services/dockerService');
  */
 router.get('/', async (req, res) => {
   try {
+    console.log('📋 Listando serviços Docker...');
     const services = await dockerService.getServices();
+    console.log(`✅ ${services.length} serviços encontrados`);
     res.json({
       success: true,
       data: services,
       count: services.length
     });
   } catch (error) {
-    console.error('Erro ao listar serviços:', error);
+    console.error('❌ Erro ao listar serviços:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Erro interno do servidor'

@@ -14,7 +14,7 @@ export const useDockerEvents = () => {
   const connectSocket = useCallback(() => {
     if (socketRef.current?.connected) return;
 
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const API_URL = import.meta.env.VITE_API_URL || (window.location.protocol + '//' + window.location.host);
     
     try {
       socketRef.current = io(API_URL, {
