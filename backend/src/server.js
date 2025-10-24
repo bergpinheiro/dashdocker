@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 
@@ -36,6 +37,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Servir arquivos estáticos do frontend
+app.use(express.static(path.join(__dirname, '../../frontend/dist')));
+
 // Middleware de logging
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
@@ -59,13 +63,22 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Rota raiz
+// Rota raiz - servir o frontend
 app.get('/', (req, res) => {
-  res.json({
-    message: 'DashDocker API',
-    version: '1.0.0',
-    status: 'running'
-  });
+  res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
+});
+
+// Catch-all para SPA (todas as rotas não-API servem o index.html)
+app.get('*', (req, res) => {
+  // Se for uma rota de API, retornar 404
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({
+      success: false,
+      error: 'Endpoint não encontrado'
+    });
+  }
+  // Caso contrário, servir o SPA
+  res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
 });
 
 // WebSocket para stats em tempo real
