@@ -75,29 +75,19 @@ cd dashdocker
 cp .env.example .env
 ```
 
-### 3. Construir as imagens
+### 3. Deploy no Docker Swarm
 ```bash
-# Linux/Mac
-./build.sh
-
-# Windows
-build.bat
-```
-
-### 4. Deploy no Docker Swarm
-```bash
-# Deploy completo (dashboard + agentes)
+# Deploy completo (imagem construída automaticamente)
 docker stack deploy -c docker-stack.yml dashdocker
 ```
 
-### 5. Verificar serviços
+### 4. Verificar serviços
 ```bash
 # Ver todos os serviços
 docker service ls
 
 # Deve mostrar:
 # - dashdocker_dashdocker (dashboard principal)
-# - dashdocker_dashdocker-agent (agentes em todos os nodes)
 ```
 
 Edite o arquivo `.env` com suas configurações:

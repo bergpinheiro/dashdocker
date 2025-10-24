@@ -12,7 +12,6 @@ const statsService = require('./services/statsService');
 const eventService = require('./services/eventService');
 const notificationService = require('./services/notificationService');
 const alertService = require('./services/alertService');
-const swarmService = require('./services/swarmService');
 
 // Importar rotas
 const authRoutes = require('./routes/auth');
@@ -20,7 +19,6 @@ const servicesRoutes = require('./routes/services');
 const containersRoutes = require('./routes/containers');
 const notificationsRoutes = require('./routes/notifications');
 const alertsRoutes = require('./routes/alerts');
-const swarmRoutes = require('./routes/swarm');
 
 // Importar middleware
 const { authenticateToken } = require('./middleware/auth');
@@ -61,7 +59,6 @@ app.use('/api/services', authenticateToken, servicesRoutes);
 app.use('/api/containers', authenticateToken, containersRoutes);
 app.use('/api/notify', authenticateToken, notificationsRoutes);
 app.use('/api/alerts', authenticateToken, alertsRoutes);
-app.use('/api/swarm', authenticateToken, swarmRoutes);
 
 // Rota de health check
 app.get('/health', (req, res) => {
