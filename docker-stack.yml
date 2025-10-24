@@ -20,9 +20,7 @@ services:
       - NODE_ENV=production
       - DASHBOARD_USERNAME=${DASHBOARD_USERNAME:-admin}
       - DASHBOARD_PASSWORD=${DASHBOARD_PASSWORD:-admin123}
-      - VITE_SWARMPIT_API_URL=${SWARMPIT_API_URL:-http://swarmpit:8080/api}
-      - VITE_SWARMPIT_WS_URL=${SWARMPIT_WS_URL:-ws://swarmpit:8080/ws}
-      - VITE_SWARMPIT_TOKEN=${SWARMPIT_TOKEN:-}
+      - VITE_API_URL=
     networks:
       - dashdocker-network
     deploy:
@@ -54,37 +52,34 @@ services:
         monitor: 60s
         max_failure_ratio: 0.3
 
-  # Monitor de cluster (apenas manager) - Desabilitado
-  # dashdocker-monitor:
-  #   image: dashdocker:latest
-  #   build:
-  #     context: .
-  #     target: production
-  #   hostname: dashdocker-monitor
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock:ro
-  #   environment:
-  #     - NODE_ENV=production
-  #     - MONITOR_MODE=true
-  #   networks:
-  #     - dashdocker-network
-  #   deploy:
-  #     replicas: 0  # Desabilitado - usar Swarmpit
-  #     resources:
-  #       limits:
-  #         cpus: '0.1'
-  #         memory: 64M
-  #       reservations:
-  #         cpus: '0.05'
-  #         memory: 32M
-  #     restart_policy:
-  #       condition: on-failure
-  #       delay: 5s
-  #       max_attempts: 3
-  #       window: 120s
-  #     placement:
-  #       constraints:
-  #         - node.role == manager
+  # Agent de monitoramento (todos os nodes)
+  dashdocker-agent:
+    image: dashdocker-agent:latest
+    build:
+      context: ./agent
+      dockerfile: Dockerfile.agent
+    environment:
+      - BACKEND_URL=ws://dashdocker:3001
+      - NODE_NAME={{.Node.Hostname}}
+      - AGENT_UPDATE_INTERVAL=5000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - dashdocker-network
+    deploy:
+      mode: global  # Roda em TODOS os nodes
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64M
+        reservations:
+          cpus: '0.05'
+          memory: 32M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
 
 networks:
   dashdocker-network:

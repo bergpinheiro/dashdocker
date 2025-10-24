@@ -77,6 +77,15 @@ export const apiEndpoints = {
     getById: (id) => api.get(`/api/services/${id}`),
   },
   
+  // Cluster
+  cluster: {
+    nodes: () => api.get('/api/cluster/nodes'),
+    containers: () => api.get('/api/cluster/containers'),
+    stats: () => api.get('/api/cluster/stats'),
+    node: (nodeId) => api.get(`/api/cluster/node/${nodeId}`),
+    events: () => api.get('/api/cluster/events'),
+  },
+  
   // Containers
   containers: {
     list: () => api.get('/api/containers'),

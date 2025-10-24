@@ -12,6 +12,7 @@ const statsService = require('./services/statsService');
 const eventService = require('./services/eventService');
 const notificationService = require('./services/notificationService');
 const alertService = require('./services/alertService');
+const aggregatorService = require('./services/aggregatorService');
 
 // Importar rotas
 const authRoutes = require('./routes/auth');
@@ -32,6 +33,9 @@ const io = new Server(server, {
     methods: ["GET", "POST"]
   }
 });
+
+// Namespace para agents
+const agentsNamespace = io.of('/agents');
 
 const PORT = process.env.PORT || 3001;
 
@@ -129,6 +133,46 @@ io.on('connection', (socket) => {
 // Inicializar monitoramento de eventos
 eventService.startMonitoring((eventType, data) => {
   io.emit(eventType, data);
+});
+
+// WebSocket para agents
+agentsNamespace.on('connection', (socket) => {
+  console.log(`🤖 Agent conectado: ${socket.id}`);
+  
+  // Registrar agent
+  socket.on('agent:register', (data) => {
+    console.log(`📝 Agent registrado: ${data.nodeId}`);
+    socket.nodeId = data.nodeId;
+  });
+  
+  // Receber dados do agent
+  socket.on('agent:data', (data) => {
+    if (socket.nodeId) {
+      // Atualizar dados no agregador
+      aggregatorService.updateNodeData(socket.nodeId, data);
+      
+      // Broadcast para frontend
+      io.emit('cluster:update', {
+        nodeId: socket.nodeId,
+        timestamp: data.timestamp,
+        containers: data.containers.length,
+        stats: Object.keys(data.stats).length
+      });
+    }
+  });
+  
+  // Desconexão do agent
+  socket.on('disconnect', (reason) => {
+    console.log(`🤖 Agent desconectado: ${socket.id} (${reason})`);
+    if (socket.nodeId) {
+      // Marcar node como offline
+      const nodeData = aggregatorService.getNodeData(socket.nodeId);
+      if (nodeData) {
+        nodeData.isOnline = false;
+        console.log(`⚠️ Node ${socket.nodeId} marcado como offline`);
+      }
+    }
+  });
 });
 
 /**

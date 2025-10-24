@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDockerServices } from '../hooks/useDockerServices';
 import { useContainerStats } from '../hooks/useContainerStats';
 import ServiceCard from './ServiceCard';
+import NodesOverview from './NodesOverview';
 import { 
   Server, 
   Activity, 
@@ -246,6 +247,11 @@ const Dashboard = ({ onLogout, onShowAlerts }) => {
         </div>
 
         {/* Services Grid */}
+        {/* Nodes Overview */}
+        <div className="mb-8">
+          <NodesOverview />
+        </div>
+
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-white">Serviços Docker</h2>

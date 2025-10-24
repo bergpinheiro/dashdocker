@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const clusterService = require('../services/clusterService');
+const aggregatorService = require('../services/aggregatorService');
 
 /**
  * GET /api/cluster/nodes
@@ -8,7 +8,7 @@ const clusterService = require('../services/clusterService');
  */
 router.get('/nodes', async (req, res) => {
   try {
-    const nodes = await clusterService.discoverNodes();
+    const nodes = aggregatorService.getAllNodesData();
     res.json({
       success: true,
       data: nodes,
@@ -29,7 +29,7 @@ router.get('/nodes', async (req, res) => {
  */
 router.get('/stats', async (req, res) => {
   try {
-    const stats = await clusterService.getClusterStats();
+    const stats = aggregatorService.getClusterStats();
     res.json({
       success: true,
       data: stats
@@ -49,7 +49,7 @@ router.get('/stats', async (req, res) => {
  */
 router.get('/containers', async (req, res) => {
   try {
-    const containers = await clusterService.getAllContainersFromCluster();
+    const containers = aggregatorService.getAllContainers();
     res.json({
       success: true,
       data: containers,
@@ -57,6 +57,56 @@ router.get('/containers', async (req, res) => {
     });
   } catch (error) {
     console.error('Erro ao listar containers do cluster:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Erro interno do servidor'
+    });
+  }
+});
+
+/**
+ * GET /api/cluster/node/:nodeId
+ * Obtém dados de um node específico
+ */
+router.get('/node/:nodeId', async (req, res) => {
+  try {
+    const nodeId = req.params.nodeId;
+    const nodeData = aggregatorService.getNodeData(nodeId);
+    
+    if (!nodeData) {
+      return res.status(404).json({
+        success: false,
+        error: 'Node não encontrado'
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: nodeData
+    });
+  } catch (error) {
+    console.error('Erro ao obter dados do node:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Erro interno do servidor'
+    });
+  }
+});
+
+/**
+ * GET /api/cluster/events
+ * Obtém eventos recentes de todos os nodes
+ */
+router.get('/events', async (req, res) => {
+  try {
+    const events = aggregatorService.getAllRecentEvents();
+    res.json({
+      success: true,
+      data: events,
+      count: events.length
+    });
+  } catch (error) {
+    console.error('Erro ao obter eventos do cluster:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Erro interno do servidor'

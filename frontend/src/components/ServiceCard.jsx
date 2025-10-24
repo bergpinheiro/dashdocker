@@ -19,6 +19,10 @@ const ServiceCard = ({ service, stats = null }) => {
   const containers = service.containers || [];
   const hasContainers = containers.length > 0;
   
+  // Obter informações do node
+  const nodeId = service.nodeId || 'unknown';
+  const nodeName = service.nodeName || nodeId;
+  
   // Calcular estatísticas do serviço
   let serviceStats;
   
@@ -101,14 +105,19 @@ const ServiceCard = ({ service, stats = null }) => {
               <h3 className="text-lg font-semibold text-white truncate">
                 {service.name}
               </h3>
-              <p className={`text-sm ${getStatusColor()}`}>
-                {getOverallStatus()} • {serviceStats.runningContainers}/{serviceStats.totalContainers} containers
-                {serviceStats.stoppedContainers > 0 && (
-                  <span className="text-danger-400 ml-1">
-                    ({serviceStats.stoppedContainers} parados)
-                  </span>
-                )}
-              </p>
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className={`text-sm ${getStatusColor()}`}>
+                  {getOverallStatus()} • {serviceStats.runningContainers}/{serviceStats.totalContainers} containers
+                  {serviceStats.stoppedContainers > 0 && (
+                    <span className="text-danger-400 ml-1">
+                      ({serviceStats.stoppedContainers} parados)
+                    </span>
+                  )}
+                </p>
+                <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded-full">
+                  {nodeName}
+                </span>
+              </div>
             </div>
           </div>
           <ExternalLink className="w-4 h-4 text-gray-400" />

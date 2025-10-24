@@ -1,0 +1,25 @@
+{
+  "name": "dashdocker-agent",
+  "version": "1.0.0",
+  "description": "DashDocker Agent - Coleta dados de containers em cada node",
+  "main": "src/agent.js",
+  "scripts": {
+    "start": "node src/agent.js",
+    "dev": "nodemon src/agent.js"
+  },
+  "dependencies": {
+    "dockerode": "^4.0.2",
+    "socket.io-client": "^4.7.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": [
+    "docker",
+    "monitoring",
+    "agent",
+    "swarm"
+  ],
+  "author": "DashDocker",
+  "license": "MIT"
+}

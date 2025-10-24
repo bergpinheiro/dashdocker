@@ -33,7 +33,7 @@ export const useDockerServices = () => {
         setLoading(true);
       }
       
-      const response = await apiEndpoints.services.list();
+      const response = await apiEndpoints.cluster.containers();
       
       if (isMountedRef.current) {
         const servicesData = response.data.data || [];
