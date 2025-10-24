@@ -66,6 +66,23 @@ const ServiceDetail = ({ onLogout }) => {
 
   // Usar containers que vêm da API do serviço
   const serviceContainers = service?.containers || [];
+  
+  // Obter stats em tempo real para os containers do serviço
+  const getServiceStats = () => {
+    if (!stats || stats.length === 0) return [];
+    
+    return stats.filter(stat => {
+      const containerName = stat.name || '';
+      const serviceName = service?.name || '';
+      
+      return containerName.includes(serviceName) || 
+             serviceName.includes(containerName) ||
+             containerName.startsWith(serviceName) ||
+             containerName.endsWith(serviceName);
+    });
+  };
+  
+  const serviceStats = getServiceStats();
 
   const handleViewLogs = (containerId, containerName) => {
     setSelectedContainer({ id: containerId, name: containerName });
@@ -277,7 +294,9 @@ const ServiceDetail = ({ onLogout }) => {
                       </thead>
                       <tbody className="table-body">
                         {serviceContainers.map((container) => {
-                          const containerStats = getContainerStats(container.containerId);
+                          // Tentar encontrar stats por ID ou nome
+                          const containerStats = getContainerStats(container.id) || 
+                                                stats.find(stat => stat.name === container.name);
                           return (
                             <tr key={container.containerId} className="table-row">
                               <td className="table-cell">
@@ -332,7 +351,7 @@ const ServiceDetail = ({ onLogout }) => {
                 <div className="card">
                   <div className="card-body">
                     <StatsChart
-                      data={serviceContainers[0] ? [serviceContainers[0]] : []}
+                      data={serviceStats}
                       type="cpu"
                       height={200}
                       containerName={serviceContainers[0]?.name}
@@ -342,7 +361,7 @@ const ServiceDetail = ({ onLogout }) => {
                 <div className="card">
                   <div className="card-body">
                     <StatsChart
-                      data={serviceContainers[0] ? [serviceContainers[0]] : []}
+                      data={serviceStats}
                       type="memory"
                       height={200}
                       containerName={serviceContainers[0]?.name}
