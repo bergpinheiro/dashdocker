@@ -12,10 +12,11 @@ import {
   Bell,
   Wifi,
   WifiOff,
-  LogOut
+  LogOut,
+  Settings
 } from 'lucide-react';
 
-const Dashboard = ({ onLogout }) => {
+const Dashboard = ({ onLogout, onShowAlerts }) => {
   const { services, loading: servicesLoading, error: servicesError, refetch: refetchServices, lastUpdate: servicesLastUpdate } = useDockerServices();
   const { stats, isConnected, error: statsError, getGeneralStats } = useContainerStats();
   const [lastUpdate, setLastUpdate] = useState(new Date());
@@ -131,31 +132,38 @@ const Dashboard = ({ onLogout }) => {
                 </div>
               </div>
 
-              {/* Botões de ação */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleTestNotification}
-                  className="btn btn-secondary text-sm"
-                  title="Testar notificação WhatsApp"
-                >
-                  <Bell className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={handleRefresh}
-                  className="btn btn-primary text-sm"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Atualizar
-                </button>
-                <button
-                  onClick={onLogout}
-                  className="btn btn-danger text-sm"
-                  title="Sair do dashboard"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Sair
-                </button>
-              </div>
+                  {/* Botões de ação */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={onShowAlerts}
+                      className="btn btn-secondary text-sm"
+                      title="Configurar alertas"
+                    >
+                      <Settings className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={handleTestNotification}
+                      className="btn btn-secondary text-sm"
+                      title="Testar notificação WhatsApp"
+                    >
+                      <Bell className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={handleRefresh}
+                      className="btn btn-primary text-sm"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      Atualizar
+                    </button>
+                    <button
+                      onClick={onLogout}
+                      className="btn btn-danger text-sm"
+                      title="Sair do dashboard"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sair
+                    </button>
+                  </div>
             </div>
           </div>
         </div>

@@ -11,12 +11,14 @@ const dockerService = require('./services/dockerService');
 const statsService = require('./services/statsService');
 const eventService = require('./services/eventService');
 const notificationService = require('./services/notificationService');
+const alertService = require('./services/alertService');
 
 // Importar rotas
 const authRoutes = require('./routes/auth');
 const servicesRoutes = require('./routes/services');
 const containersRoutes = require('./routes/containers');
 const notificationsRoutes = require('./routes/notifications');
+const alertsRoutes = require('./routes/alerts');
 
 // Importar middleware
 const { authenticateToken } = require('./middleware/auth');
@@ -56,6 +58,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/services', authenticateToken, servicesRoutes);
 app.use('/api/containers', authenticateToken, containersRoutes);
 app.use('/api/notify', authenticateToken, notificationsRoutes);
+app.use('/api/alerts', authenticateToken, alertsRoutes);
 
 // Rota de health check
 app.get('/health', (req, res) => {
@@ -120,6 +123,32 @@ eventService.startMonitoring((eventType, data) => {
   io.emit(eventType, data);
 });
 
+/**
+ * Inicia monitoramento periódico de alertas
+ */
+function startAlertMonitoring() {
+  // Verificar alertas a cada 30 segundos
+  setInterval(async () => {
+    try {
+      console.log('🔍 Verificando alertas de containers...');
+      
+      // Obter todos os containers
+      const containers = await dockerService.getContainers();
+      
+      // Verificar alertas de saúde e containers parados
+      await statsService.checkContainerAlerts(containers);
+      
+      // Limpar histórico de alertas antigos
+      alertService.cleanupAlertHistory();
+      
+    } catch (error) {
+      console.error('Erro na verificação de alertas:', error);
+    }
+  }, 30000); // 30 segundos
+  
+  console.log('✅ Monitoramento de alertas iniciado (30s)');
+}
+
 // Função de inicialização
 async function startServer() {
   try {
@@ -149,6 +178,9 @@ async function startServer() {
       console.log(`🚀 Servidor rodando na porta ${PORT}`);
       console.log(`📊 Dashboard: http://localhost:${PORT}`);
       console.log(`🔌 WebSocket: ws://localhost:${PORT}/socket.io`);
+      
+      // Iniciar monitoramento de alertas
+      startAlertMonitoring();
     });
 
   } catch (error) {

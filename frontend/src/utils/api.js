@@ -95,6 +95,14 @@ export const apiEndpoints = {
     config: () => api.get('/api/notify/config'),
   },
   
+  // Alertas
+  alerts: {
+    getThresholds: () => api.get('/api/alerts/thresholds'),
+    updateThresholds: (data) => api.put('/api/alerts/thresholds', data),
+    test: (data) => api.post('/api/alerts/test', data),
+    getStatus: () => api.get('/api/alerts/status'),
+  },
+  
   // Health check
   health: () => api.get('/health'),
 };

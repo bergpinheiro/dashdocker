@@ -3,12 +3,14 @@ import { useState, useEffect } from 'react';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import ServiceDetail from './components/ServiceDetail';
+import AlertsSettings from './components/AlertsSettings';
 import { apiEndpoints } from './utils/api';
 import './styles/index.css';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [currentView, setCurrentView] = useState('dashboard');
 
   useEffect(() => {
     checkAuth();
@@ -40,6 +42,15 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('dashdocker_token');
     setIsAuthenticated(false);
+    setCurrentView('dashboard');
+  };
+
+  const handleShowAlerts = () => {
+    setCurrentView('alerts');
+  };
+
+  const handleBackToDashboard = () => {
+    setCurrentView('dashboard');
   };
 
   if (loading) {
@@ -65,14 +76,17 @@ function App() {
                 <Login onLogin={handleLogin} />
             } 
           />
-          <Route 
-            path="/" 
-            element={
-              isAuthenticated ? 
-                <Dashboard onLogout={handleLogout} /> : 
-                <Navigate to="/login" replace />
-            } 
-          />
+              <Route
+                path="/"
+                element={
+                  isAuthenticated ?
+                    (currentView === 'alerts' ? 
+                      <AlertsSettings onBack={handleBackToDashboard} /> :
+                      <Dashboard onLogout={handleLogout} onShowAlerts={handleShowAlerts} />
+                    ) :
+                    <Navigate to="/login" replace />
+                }
+              />
           <Route 
             path="/service/:id" 
             element={

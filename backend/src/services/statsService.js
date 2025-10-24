@@ -1,5 +1,6 @@
 const { docker } = require('../config/docker');
 const { calculateCpuPercent, calculateMemoryUsage } = require('../utils/statsCalculator');
+const alertService = require('./alertService');
 
 /**
  * Serviço para coleta de estatísticas em tempo real
@@ -79,6 +80,9 @@ class StatsService {
         network: this.calculateNetworkStats(rawStats),
         blockIO: this.calculateBlockIOStats(rawStats)
       };
+
+      // Verificar alertas de recursos
+      this.checkResourceAlerts(stats);
 
       callback(stats);
     } catch (error) {
@@ -183,6 +187,47 @@ class StatsService {
     } catch (error) {
       console.error('Erro ao obter stats de todos os containers:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Verifica alertas de recursos para um container
+   * @param {Object} stats - Estatísticas do container
+   */
+  async checkResourceAlerts(stats) {
+    try {
+      // Obter informações do container
+      const container = docker.getContainer(stats.containerId);
+      const containerInfo = await container.inspect();
+      
+      const containerData = {
+        id: stats.containerId,
+        name: containerInfo.Name.replace('/', ''),
+        image: containerInfo.Config.Image,
+        status: containerInfo.State.Status,
+        health: containerInfo.State.Health?.Status
+      };
+      
+      // Verificar alertas de recursos
+      alertService.checkResourceAlerts(stats, containerData);
+    } catch (error) {
+      console.error('Erro ao verificar alertas de recursos:', error);
+    }
+  }
+
+  /**
+   * Verifica alertas de saúde e containers parados
+   * @param {Array} containers - Lista de containers
+   */
+  async checkContainerAlerts(containers) {
+    try {
+      // Verificar saúde dos containers
+      await alertService.checkContainerHealth(containers);
+      
+      // Verificar containers parados há muito tempo
+      await alertService.checkStoppedContainers(containers);
+    } catch (error) {
+      console.error('Erro ao verificar alertas de containers:', error);
     }
   }
 
