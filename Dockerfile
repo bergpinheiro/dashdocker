@@ -4,7 +4,7 @@
 FROM node:18-alpine AS build-frontend
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm ci --only=production
+RUN npm install --omit=dev
 COPY frontend/ .
 RUN npm run build
 
@@ -12,7 +12,7 @@ RUN npm run build
 FROM node:18-alpine AS build-backend
 WORKDIR /app/backend
 COPY backend/package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --omit=dev && npm cache clean --force
 
 # Stage 3: Production Image
 FROM node:18-alpine AS production
