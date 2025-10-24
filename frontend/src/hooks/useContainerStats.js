@@ -29,7 +29,6 @@ export const useContainerStats = () => {
       });
 
       socketRef.current.on('connect', () => {
-        console.log('🔌 WebSocket conectado');
         setIsConnected(true);
         setError(null);
         
@@ -41,13 +40,11 @@ export const useContainerStats = () => {
       });
 
       socketRef.current.on('disconnect', (reason) => {
-        console.log('🔌 WebSocket desconectado:', reason);
         setIsConnected(false);
         
         // Tentar reconectar após 5 segundos se não foi intencional
         if (reason !== 'io client disconnect') {
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log('🔄 Tentando reconectar WebSocket...');
             connectSocket();
           }, 5000);
         }
@@ -64,8 +61,7 @@ export const useContainerStats = () => {
       });
 
       socketRef.current.on('docker:event', (event) => {
-        console.log('📡 Evento Docker recebido:', event);
-        // Aqui você pode adicionar lógica para processar eventos
+        // Processar eventos Docker se necessário
       });
 
     } catch (err) {

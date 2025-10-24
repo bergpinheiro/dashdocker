@@ -27,13 +27,11 @@ export const useDockerEvents = () => {
       });
 
       socketRef.current.on('connect', () => {
-        console.log('🔌 WebSocket conectado para eventos');
         setIsConnected(true);
         setError(null);
       });
 
       socketRef.current.on('disconnect', (reason) => {
-        console.log('🔌 WebSocket desconectado:', reason);
         setIsConnected(false);
       });
 
@@ -44,8 +42,6 @@ export const useDockerEvents = () => {
       });
 
       socketRef.current.on('docker:event', (event) => {
-        console.log('📡 Evento Docker:', event);
-        
         setEvents(prevEvents => {
           const newEvents = [event, ...prevEvents];
           // Manter apenas os últimos maxEvents

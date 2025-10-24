@@ -63,7 +63,6 @@ const Dashboard = ({ onLogout, onShowAlerts }) => {
 
   const handleTestNotification = () => {
     // Implementar teste de notificação
-    console.log('Testando notificação...');
   };
 
   if (servicesLoading && services.length === 0) {

@@ -38,8 +38,7 @@ const LogsModal = ({ isOpen, onClose, containerId, containerName }) => {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(logs);
-      // Aqui você pode adicionar um toast de sucesso
-      console.log('Logs copiados para a área de transferência');
+      // Logs copiados com sucesso
     } catch (err) {
       console.error('Erro ao copiar logs:', err);
     }

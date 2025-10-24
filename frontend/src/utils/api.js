@@ -15,8 +15,6 @@ const api = axios.create({
 // Interceptor para requests
 api.interceptors.request.use(
   (config) => {
-    console.log(`🌐 API Request: ${config.method?.toUpperCase()} ${config.url}`);
-    
     // Adicionar token de autenticação se disponível
     const token = localStorage.getItem('dashdocker_token');
     if (token) {
@@ -34,7 +32,6 @@ api.interceptors.request.use(
 // Interceptor para responses
 api.interceptors.response.use(
   (response) => {
-    console.log(`✅ API Response: ${response.status} ${response.config.url}`);
     return response;
   },
   (error) => {
