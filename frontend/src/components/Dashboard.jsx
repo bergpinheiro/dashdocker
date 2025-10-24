@@ -3,6 +3,7 @@ import { useDockerServices } from '../hooks/useDockerServices';
 import { useContainerStats } from '../hooks/useContainerStats';
 import ServiceCard from './ServiceCard';
 import NodesOverview from './NodesOverview';
+import { apiEndpoints } from '../utils/api';
 import { 
   Server, 
   Activity, 
@@ -21,6 +22,30 @@ const Dashboard = ({ onLogout, onShowAlerts }) => {
   const { services, loading: servicesLoading, error: servicesError, refetch: refetchServices, lastUpdate: servicesLastUpdate } = useDockerServices();
   const { stats, isConnected, error: statsError, isLoading: statsLoading, getGeneralStats } = useContainerStats();
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [clusterStats, setClusterStats] = useState({
+    totalContainers: 0,
+    runningContainers: 0,
+    stoppedContainers: 0,
+    totalCpuUsage: 0,
+    totalMemoryUsage: 0
+  });
+  const [containers, setContainers] = useState([]);
+
+  // Buscar dados do cluster
+  const fetchClusterData = async () => {
+    try {
+      const [statsResponse, containersResponse] = await Promise.all([
+        apiEndpoints.cluster.stats(),
+        apiEndpoints.cluster.containers()
+      ]);
+      
+      setClusterStats(statsResponse.data.data);
+      setContainers(containersResponse.data.data || []);
+      setLastUpdate(new Date());
+    } catch (error) {
+      console.error('Erro ao buscar dados do cluster:', error);
+    }
+  };
 
   // Atualizar timestamp quando os serviços forem atualizados
   useEffect(() => {
@@ -28,6 +53,13 @@ const Dashboard = ({ onLogout, onShowAlerts }) => {
       setLastUpdate(servicesLastUpdate);
     }
   }, [servicesLastUpdate]);
+
+  // Buscar dados do cluster periodicamente
+  useEffect(() => {
+    fetchClusterData();
+    const interval = setInterval(fetchClusterData, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Agrupar stats por serviço (com fallback para dados estáticos)
   const getServiceStats = (service) => {
@@ -195,8 +227,8 @@ const Dashboard = ({ onLogout, onShowAlerts }) => {
             <div className="card-body">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-400">Total de Serviços</p>
-                  <p className="text-2xl font-bold text-white">{services.length}</p>
+                  <p className="text-sm text-gray-400">Total de Containers</p>
+                  <p className="text-2xl font-bold text-white">{clusterStats.totalContainers}</p>
                 </div>
                 <Server className="w-8 h-8 text-primary-500" />
               </div>
@@ -209,7 +241,7 @@ const Dashboard = ({ onLogout, onShowAlerts }) => {
                 <div>
                   <p className="text-sm text-gray-400">Containers Ativos</p>
                   <p className="text-2xl font-bold text-success-500">
-                    {generalStats.runningContainers}
+                    {clusterStats.runningContainers}
                   </p>
                 </div>
                 <CheckCircle className="w-8 h-8 text-success-500" />
@@ -223,7 +255,7 @@ const Dashboard = ({ onLogout, onShowAlerts }) => {
                 <div>
                   <p className="text-sm text-gray-400">Containers Parados</p>
                   <p className="text-2xl font-bold text-danger-500">
-                    {generalStats.stoppedContainers}
+                    {clusterStats.stoppedContainers}
                   </p>
                 </div>
                 <XCircle className="w-8 h-8 text-danger-500" />
@@ -237,7 +269,7 @@ const Dashboard = ({ onLogout, onShowAlerts }) => {
                 <div>
                   <p className="text-sm text-gray-400">CPU Médio</p>
                   <p className="text-2xl font-bold text-warning-500">
-                    {statsLoading ? '...' : `${generalStats.averageCpu?.toFixed(1) || 0}%`}
+                    {clusterStats.totalCpuUsage?.toFixed(1) || 0}%
                   </p>
                 </div>
                 <Activity className="w-8 h-8 text-warning-500" />
@@ -254,29 +286,29 @@ const Dashboard = ({ onLogout, onShowAlerts }) => {
 
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-white">Serviços Docker</h2>
+            <h2 className="text-2xl font-bold text-white">Containers Docker</h2>
             <div className="text-sm text-gray-400">
               Atualizado: {lastUpdate.toLocaleTimeString('pt-BR')}
             </div>
           </div>
 
-          {services.length === 0 ? (
+          {containers.length === 0 ? (
             <div className="text-center py-12">
               <Server className="w-16 h-16 text-gray-500 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-400 mb-2">
-                Nenhum serviço encontrado
+                Nenhum container encontrado
               </h3>
               <p className="text-gray-500">
-                Não há serviços Docker em execução no momento.
+                Não há containers Docker em execução no momento.
               </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {services.map((service) => (
+              {containers.map((container) => (
                 <ServiceCard
-                  key={service.id}
-                  service={service}
-                  stats={getServiceStats(service)}
+                  key={container.id}
+                  service={container}
+                  stats={[]}
                 />
               ))}
             </div>
