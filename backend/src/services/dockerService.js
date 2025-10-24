@@ -1,5 +1,6 @@
 const { docker } = require('../config/docker');
 const { calculateUptime, getStatusColor } = require('../utils/statsCalculator');
+const clusterService = require('./clusterService');
 
 /**
  * Serviço para interação com a API do Docker com cache
@@ -186,12 +187,13 @@ class DockerService {
   }
 
   /**
-   * Lista todos os containers
+   * Lista todos os containers do cluster
    * @returns {Promise<Array>} Lista de containers
    */
   async getContainers() {
     try {
-      const containers = await docker.listContainers({ all: true });
+      // Usar clusterService para obter containers de todos os nodes
+      const containers = await clusterService.getAllContainersFromCluster();
       
       return containers.map(container => ({
         id: container.Id,
@@ -203,11 +205,14 @@ class DockerService {
         ports: this.formatPorts(container.Ports),
         createdAt: container.Created,
         command: container.Command,
-        labels: container.Labels || {}
+        labels: container.Labels || {},
+        nodeId: container.nodeId,
+        nodeName: container.nodeName,
+        nodeRole: container.nodeRole
       }));
     } catch (error) {
-      console.error('Erro ao listar containers:', error);
-      throw new Error('Falha ao obter containers Docker');
+      console.error('Erro ao listar containers do cluster:', error);
+      throw new Error('Falha ao obter containers do cluster');
     }
   }
 

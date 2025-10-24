@@ -1,6 +1,7 @@
 const { docker } = require('../config/docker');
 const { calculateCpuPercent, calculateMemoryUsage } = require('../utils/statsCalculator');
 const alertService = require('./alertService');
+const clusterService = require('./clusterService');
 
 /**
  * Serviço para coleta de estatísticas em tempo real
@@ -152,40 +153,16 @@ class StatsService {
   }
 
   /**
-   * Obtém stats de todos os containers ativos
+   * Obtém stats de todos os containers do cluster
    * @returns {Promise<Array>} Stats de todos os containers
    */
   async getAllContainersStats() {
     try {
-      const containers = await docker.listContainers();
-      const statsPromises = containers.map(async (container) => {
-        try {
-          const containerObj = docker.getContainer(container.Id);
-          const stats = await containerObj.stats({ stream: false });
-          
-          return {
-            containerId: container.Id,
-            name: container.Names[0]?.replace('/', '') || 'sem-nome',
-            status: container.State,
-            cpu: {
-              percent: calculateCpuPercent(stats),
-              cores: stats.cpu_stats.online_cpus || 0
-            },
-            memory: calculateMemoryUsage(stats),
-            network: this.calculateNetworkStats(stats),
-            blockIO: this.calculateBlockIOStats(stats),
-            timestamp: new Date().toISOString()
-          };
-        } catch (error) {
-          console.error(`Erro ao obter stats do container ${container.Id}:`, error);
-          return null;
-        }
-      });
-
-      const results = await Promise.all(statsPromises);
-      return results.filter(stat => stat !== null);
+      // Usar clusterService para obter stats de todos os nodes
+      const stats = await clusterService.getAllStatsFromCluster();
+      return stats;
     } catch (error) {
-      console.error('Erro ao obter stats de todos os containers:', error);
+      console.error('Erro ao obter stats do cluster:', error);
       throw error;
     }
   }

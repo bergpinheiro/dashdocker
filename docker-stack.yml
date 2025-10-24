@@ -22,22 +22,19 @@ services:
     networks:
       - dashdocker-network
     deploy:
-      replicas: 1
+      mode: global  # Roda em TODOS os nodes
       resources:
         limits:
-          cpus: '0.5'
-          memory: 256M
-        reservations:
-          cpus: '0.25'
+          cpus: '0.3'
           memory: 128M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
       restart_policy:
         condition: on-failure
         delay: 5s
         max_attempts: 3
         window: 120s
-      placement:
-        constraints:
-          - node.role == manager
       update_config:
         parallelism: 1
         delay: 10s

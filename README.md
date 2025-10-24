@@ -25,11 +25,18 @@ Dashboard web completo para monitoramento de serviços Docker e seus containers 
 - **Gráficos Interativos**: Charts em tempo real com Recharts
 - **Navegação Intuitiva**: Dashboard principal e páginas de detalhes
 
+### 🐝 Monitoramento de Cluster
+- **Modo Global**: Dashboard roda em todos os nodes do Swarm
+- **Descoberta Automática**: Detecta todos os nodes do cluster
+- **Agregação de Dados**: Monitora containers de todos os nodes
+- **Informações de Node**: Mostra em qual node cada container está rodando
+- **Escalabilidade**: Adiciona novos nodes automaticamente
+
 ### 🚀 Containerização Otimizada
 - **Docker Multi-stage**: Imagem final de apenas ~170MB
-- **Nginx Lightweight**: Servidor web otimizado para arquivos estáticos
 - **Alpine Linux**: Base minimalista para máxima performance
-- **Cloudflare Tunnel**: Exposição segura sem abrir portas
+- **Modo Global**: Roda em todos os nodes do Swarm
+- **Recursos Otimizados**: CPU e memória limitados por node
 
 ## 🛠️ Tecnologias
 
@@ -87,7 +94,13 @@ docker stack deploy -c docker-stack.yml dashdocker
 docker service ls
 
 # Deve mostrar:
-# - dashdocker_dashdocker (dashboard principal)
+# - dashdocker_dashdocker (dashboard em todos os nodes)
+```
+
+### 5. Acessar o Dashboard
+```bash
+# O dashboard estará disponível em qualquer node do Swarm
+# Acesse: http://localhost:8080 (ou IP do node)
 ```
 
 Edite o arquivo `.env` com suas configurações:
