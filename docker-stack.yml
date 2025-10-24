@@ -76,10 +76,10 @@ services:
           cpus: '0.05'
           memory: 32M
       restart_policy:
-        condition: on-failure
-        delay: 10s  # Aumentar delay para dar tempo do backend subir
-        max_attempts: 5
-        window: 300s  # Aumentar janela de tempo
+        condition: any  # Reiniciar sempre que parar
+        delay: 5s
+        max_attempts: 0  # Tentativas infinitas
+        window: 0s
 
 networks:
   dashdocker-network:
