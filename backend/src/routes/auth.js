@@ -8,9 +8,12 @@ const { generateToken, verifyCredentials, loginRateLimit } = require('../middlew
  */
 router.post('/login', loginRateLimit, async (req, res) => {
   try {
+    console.log('🔐 Login attempt:', { username: req.body.username, ip: req.ip });
+    
     const { username, password } = req.body;
 
     if (!username || !password) {
+      console.log('❌ Missing credentials');
       return res.status(400).json({
         success: false,
         error: 'Username e password são obrigatórios'
@@ -20,6 +23,7 @@ router.post('/login', loginRateLimit, async (req, res) => {
     const isValid = await verifyCredentials(username, password);
     
     if (!isValid) {
+      console.log('❌ Invalid credentials for:', username);
       return res.status(401).json({
         success: false,
         error: 'Credenciais inválidas'
@@ -27,6 +31,7 @@ router.post('/login', loginRateLimit, async (req, res) => {
     }
 
     const token = generateToken(username);
+    console.log('✅ Login successful for:', username);
     
     res.json({
       success: true,
