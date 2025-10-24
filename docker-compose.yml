@@ -49,5 +49,4 @@ services:
 
 networks:
   dashdocker-network:
-    driver: overlay
-    attachable: true
+    driver: bridge
