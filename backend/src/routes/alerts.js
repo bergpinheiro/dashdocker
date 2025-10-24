@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const alertService = require('../services/alertService');
+const notificationService = require('../services/notificationService');
 
 /**
  * GET /api/alerts/thresholds

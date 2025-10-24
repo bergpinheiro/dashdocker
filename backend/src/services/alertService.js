@@ -180,12 +180,12 @@ class AlertService {
           console.log(`🕐 Container ${container.name}: parado há ${secondsAgo} segundos (calculado do status)`);
         } else {
           // Se não conseguir extrair do status, usar createdAt
-          stoppedTime = new Date(container.createdAt);
+          stoppedTime = new Date(container.createdAt * 1000); // Converter timestamp Unix para Date
           console.log(`🕐 Container ${container.name}: usando createdAt como fallback`);
         }
       } else {
-        // Usar createdAt como fallback
-        stoppedTime = new Date(container.createdAt);
+        // Usar createdAt como fallback (converter timestamp Unix)
+        stoppedTime = new Date(container.createdAt * 1000);
         console.log(`🕐 Container ${container.name}: usando createdAt como fallback (sem stoppedAt)`);
       }
       
