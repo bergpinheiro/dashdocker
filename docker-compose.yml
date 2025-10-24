@@ -15,6 +15,7 @@ services:
       - NODE_ENV=production
       - DASHBOARD_USERNAME=${DASHBOARD_USERNAME:-admin}
       - DASHBOARD_PASSWORD=${DASHBOARD_PASSWORD:-admin123}
+      - VITE_API_URL=
     restart: unless-stopped
     networks:
       - dashdocker-network
@@ -46,6 +47,23 @@ services:
         delay: 5s
         monitor: 60s
         max_failure_ratio: 0.3
+
+  # Agent de monitoramento (para desenvolvimento local)
+  dashdocker-agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile.agent
+    environment:
+      - BACKEND_URL=ws://dashdocker:3001
+      - NODE_NAME=localhost
+      - AGENT_UPDATE_INTERVAL=5000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    networks:
+      - dashdocker-network
+    depends_on:
+      - dashdocker
 
 networks:
   dashdocker-network:
