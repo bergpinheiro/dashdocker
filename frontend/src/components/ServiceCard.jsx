@@ -90,73 +90,55 @@ const ServiceCard = ({ service, stats = null }) => {
       </div>
 
       <div className="card-body">
-        <div className="space-y-4">
-          {/* Informações básicas */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Imagem</p>
-              <p className="text-sm text-white truncate max-w-48" title={container.image}>
-                {container.image}
-              </p>
+        <div className="space-y-3">
+          {/* Status e Node */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${container.status === 'running' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <span className={`text-sm font-medium ${getStatusColor()}`}>
+                {container.status === 'running' ? 'Executando' : 'Parado'}
+              </span>
             </div>
-            <div>
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Status</p>
-              <p className="text-sm text-white">
-                {container.status}
-              </p>
+            <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded-full">
+              {nodeName}
+            </span>
+          </div>
+
+          {/* CPU e Memória */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center gap-2">
+              <Cpu className="w-4 h-4 text-primary-400" />
+              <div>
+                <p className="text-xs text-gray-400">CPU</p>
+                <p className="text-sm text-white">
+                  {serviceStats.averageCpu?.toFixed(1) || 0}%
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <MemoryStick className="w-4 h-4 text-primary-400" />
+              <div>
+                <p className="text-xs text-gray-400">Memória</p>
+                <p className="text-sm text-white">
+                  {formatNumber(serviceStats.totalMemory)} MB
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Portas */}
-          {container.ports && container.ports.length > 0 && (
-            <div>
-              <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Portas</p>
-              <div className="flex flex-wrap gap-1">
-                {container.ports.slice(0, 3).map((port, index) => (
-                  <span
-                    key={index}
-                    className="px-2 py-1 bg-gray-700 text-gray-300 text-xs rounded"
-                  >
-                    {port.published}:{port.target}
-                  </span>
-                ))}
-                {container.ports.length > 3 && (
-                  <span className="px-2 py-1 bg-gray-700 text-gray-300 text-xs rounded">
-                    +{container.ports.length - 3}
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
+          {/* Imagem */}
+          <div>
+            <p className="text-xs text-gray-400 uppercase tracking-wide">Imagem</p>
+            <p className="text-sm text-white truncate" title={container.image}>
+              {container.image}
+            </p>
+          </div>
 
-          {/* Estatísticas */}
-          {stats && stats.length > 0 && (
-            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-700">
-              <div className="flex items-center gap-2">
-                <Cpu className="w-4 h-4 text-primary-400" />
-                <div>
-                  <p className="text-xs text-gray-400">CPU Médio</p>
-                  <p className="text-sm font-medium text-white">
-                    {serviceStats.averageCpu?.toFixed(1) || 0}%
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <MemoryStick className="w-4 h-4 text-success-400" />
-                <div>
-                  <p className="text-xs text-gray-400">Memória Total</p>
-                  <p className="text-sm font-medium text-white">
-                    {serviceStats.totalMemory?.toFixed(1) || 0} MB
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Timestamp */}
-          <div className="pt-2 border-t border-gray-700">
-            <p className="text-xs text-gray-500">
-              Atualizado: {formatDateTime(service.updatedAt)}
+          {/* Criado em */}
+          <div>
+            <p className="text-xs text-gray-400 uppercase tracking-wide">Criado em</p>
+            <p className="text-sm text-white">
+              {formatDateTime(container.createdAt)}
             </p>
           </div>
         </div>

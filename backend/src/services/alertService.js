@@ -30,21 +30,21 @@ class AlertService {
    * @param {Object} containerInfo - Informações do container
    */
   checkResourceAlerts(containerStats, containerInfo) {
-    const { containerId, name } = containerInfo;
+    const { containerId, name, nodeName } = containerInfo;
     const { cpu, memory } = containerStats;
     
     // Verificar CPU
     if (cpu.percent > this.thresholds.cpu.critical) {
-      this.sendResourceAlert('critical', 'cpu', containerId, name, cpu.percent, this.thresholds.cpu.critical);
+      this.sendResourceAlert('critical', 'cpu', containerId, name, cpu.percent, this.thresholds.cpu.critical, nodeName);
     } else if (cpu.percent > this.thresholds.cpu.warning) {
-      this.sendResourceAlert('warning', 'cpu', containerId, name, cpu.percent, this.thresholds.cpu.warning);
+      this.sendResourceAlert('warning', 'cpu', containerId, name, cpu.percent, this.thresholds.cpu.warning, nodeName);
     }
     
     // Verificar Memória
     if (memory.percent > this.thresholds.memory.critical) {
-      this.sendResourceAlert('critical', 'memory', containerId, name, memory.percent, this.thresholds.memory.critical);
+      this.sendResourceAlert('critical', 'memory', containerId, name, memory.percent, this.thresholds.memory.critical, nodeName);
     } else if (memory.percent > this.thresholds.memory.warning) {
-      this.sendResourceAlert('warning', 'memory', containerId, name, memory.percent, this.thresholds.memory.warning);
+      this.sendResourceAlert('warning', 'memory', containerId, name, memory.percent, this.thresholds.memory.warning, nodeName);
     }
   }
 
@@ -57,7 +57,7 @@ class AlertService {
    * @param {number} currentValue - Valor atual
    * @param {number} threshold - Limite configurado
    */
-  async sendResourceAlert(level, resource, containerId, containerName, currentValue, threshold) {
+  async sendResourceAlert(level, resource, containerId, containerName, currentValue, threshold, nodeName = null) {
     const alertKey = `${containerId}_${resource}_${level}`;
     const now = Date.now();
     const cooldown = this.alertCooldowns.resource;
@@ -80,6 +80,7 @@ class AlertService {
     
     let message = `${emoji} *Alerta de ${resourceName}*\n\n`;
     message += `*Container:* ${containerName}\n`;
+    message += `*Node:* ${nodeName || 'Desconhecido'}\n`;
     message += `*Recurso:* ${resourceName}\n`;
     message += `*Uso Atual:* ${currentValue.toFixed(1)}${resourceUnit}\n`;
     message += `*Limite:* ${threshold}${resourceUnit}\n`;
@@ -226,6 +227,7 @@ class AlertService {
     let message = `⏹️ *Container Parado há Muito Tempo*\n\n`;
     message += `*Container:* ${container.name}\n`;
     message += `*Status:* ${container.status}\n`;
+    message += `*Node:* ${container.nodeName || container.nodeId || 'Desconhecido'}\n`;
     message += `*Tempo Parado:* ${hoursStopped.toFixed(1)} horas\n`;
     message += `*Imagem:* ${container.image}\n`;
     message += `*Horário:* ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}\n\n`;
