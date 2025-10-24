@@ -26,17 +26,38 @@ Dashboard web completo para monitoramento de serviços Docker e seus containers 
 - **Navegação Intuitiva**: Dashboard principal e páginas de detalhes
 
 ### 🐝 Monitoramento de Cluster
-- **Modo Global**: Dashboard roda em todos os nodes do Swarm
+- **Arquitetura Híbrida**: Dashboard no manager + monitores em todos os nodes
 - **Descoberta Automática**: Detecta todos os nodes do cluster
 - **Agregação de Dados**: Monitora containers de todos os nodes
 - **Informações de Node**: Mostra em qual node cada container está rodando
 - **Escalabilidade**: Adiciona novos nodes automaticamente
+- **Cloudflare Tunnel**: Funciona perfeitamente com o dashboard no manager
 
 ### 🚀 Containerização Otimizada
 - **Docker Multi-stage**: Imagem final de apenas ~170MB
 - **Alpine Linux**: Base minimalista para máxima performance
 - **Modo Global**: Roda em todos os nodes do Swarm
 - **Recursos Otimizados**: CPU e memória limitados por node
+
+## 🏗️ Arquitetura
+
+### 📊 **Dashboard Principal (Manager)**
+- **Localização**: Apenas no node manager
+- **Porta**: 8080 (exposta)
+- **Função**: Interface web + API + WebSocket
+- **Cloudflare Tunnel**: Aponte para `dashdocker_dashdocker`
+
+### 🤖 **Monitores (Todos os Nodes)**
+- **Localização**: Todos os nodes do Swarm
+- **Porta**: Nenhuma (modo interno)
+- **Função**: Coleta de dados + descoberta de nodes
+- **Recursos**: Mínimos (0.1 CPU, 64MB RAM)
+
+### 🔄 **Fluxo de Dados**
+1. **Monitores** coletam dados de cada node
+2. **Dashboard** agrega dados de todos os monitores
+3. **Frontend** recebe dados via WebSocket
+4. **Cloudflare Tunnel** expõe apenas o dashboard
 
 ## 🛠️ Tecnologias
 
@@ -94,13 +115,15 @@ docker stack deploy -c docker-stack.yml dashdocker
 docker service ls
 
 # Deve mostrar:
-# - dashdocker_dashdocker (dashboard em todos os nodes)
+# - dashdocker_dashdocker (dashboard principal no manager)
+# - dashdocker_dashdocker-monitor (monitores em todos os nodes)
 ```
 
 ### 5. Acessar o Dashboard
 ```bash
-# O dashboard estará disponível em qualquer node do Swarm
-# Acesse: http://localhost:8080 (ou IP do node)
+# O dashboard estará disponível apenas no node manager
+# Acesse: http://localhost:8080 (ou IP do manager)
+# Cloudflare Tunnel: aponte para o serviço dashdocker_dashdocker
 ```
 
 Edite o arquivo `.env` com suas configurações:
