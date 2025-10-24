@@ -304,13 +304,18 @@ const Dashboard = ({ onLogout, onShowAlerts }) => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {containers.map((container) => (
-                <ServiceCard
-                  key={container.id}
-                  service={container}
-                  stats={[]}
-                />
-              ))}
+              {containers.map((container) => {
+                // Buscar stats do container específico
+                const containerStats = stats?.find(stat => stat.id === container.id) || null;
+                
+                return (
+                  <ServiceCard
+                    key={container.id}
+                    service={container}
+                    stats={containerStats}
+                  />
+                );
+              })}
             </div>
           )}
         </div>

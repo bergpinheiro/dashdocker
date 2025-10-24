@@ -155,17 +155,32 @@ class DashDockerAgent {
     try {
       const containers = await this.docker.listContainers({ all: true });
       
-      return containers.map(container => ({
-        id: container.Id,
-        name: container.Names[0]?.replace('/', '') || container.Id.substring(0, 12),
-        image: container.Image,
-        status: container.Status,
-        state: container.State,
-        created: container.Created,
-        ports: container.Ports,
-        labels: container.Labels || {},
-        command: container.Command
-      }));
+      return containers.map(container => {
+        // Converter status do Docker para formato esperado pelo frontend
+        let status = 'unknown';
+        if (container.State === 'running') {
+          status = 'running';
+        } else if (container.State === 'exited' || container.State === 'dead') {
+          status = 'exited';
+        } else if (container.State === 'paused') {
+          status = 'paused';
+        } else if (container.State === 'restarting') {
+          status = 'restarting';
+        }
+
+        return {
+          id: container.Id,
+          name: container.Names[0]?.replace('/', '') || container.Id.substring(0, 12),
+          image: container.Image,
+          status: status,
+          state: container.State,
+          statusText: container.Status, // Manter texto original para exibição
+          createdAt: container.Created,
+          ports: container.Ports,
+          labels: container.Labels || {},
+          command: container.Command
+        };
+      });
     } catch (error) {
       console.error('❌ Erro ao listar containers:', error);
       return [];
@@ -183,18 +198,27 @@ class DashDockerAgent {
         const containerObj = this.docker.getContainer(container.id);
         const containerStats = await containerObj.stats({ stream: false });
         
-        // Processar stats
+        // Processar stats com validações
         const cpuDelta = containerStats.cpu_stats.cpu_usage.total_usage - 
                         containerStats.precpu_stats.cpu_usage.total_usage;
         const systemDelta = containerStats.cpu_stats.system_cpu_usage - 
                            containerStats.precpu_stats.system_cpu_usage;
-        const cpuPercent = (cpuDelta / systemDelta) * 100.0;
+        
+        let cpuPercent = 0;
+        if (systemDelta > 0 && cpuDelta > 0) {
+          cpuPercent = (cpuDelta / systemDelta) * 100.0;
+          // Limitar a 100% e evitar valores negativos
+          cpuPercent = Math.max(0, Math.min(100, cpuPercent));
+        }
         
         const memoryUsage = containerStats.memory_stats.usage || 0;
         const memoryLimit = containerStats.memory_stats.limit || 0;
         const memoryPercent = memoryLimit > 0 ? (memoryUsage / memoryLimit) * 100.0 : 0;
         
         stats[container.id] = {
+          id: container.id,
+          name: container.name,
+          status: container.status,
           cpu: {
             percent: Math.round(cpuPercent * 100) / 100,
             usage: cpuDelta,
@@ -203,7 +227,9 @@ class DashDockerAgent {
           memory: {
             percent: Math.round(memoryPercent * 100) / 100,
             usage: memoryUsage,
-            limit: memoryLimit
+            usageMB: Math.round(memoryUsage / (1024 * 1024) * 100) / 100,
+            limit: memoryLimit,
+            limitMB: Math.round(memoryLimit / (1024 * 1024) * 100) / 100
           },
           network: {
             rx_bytes: containerStats.networks?.eth0?.rx_bytes || 0,
@@ -212,7 +238,8 @@ class DashDockerAgent {
           block: {
             read: containerStats.blkio_stats?.io_service_bytes_read || 0,
             write: containerStats.blkio_stats?.io_service_bytes_write || 0
-          }
+          },
+          timestamp: Date.now()
         };
         
       } catch (error) {

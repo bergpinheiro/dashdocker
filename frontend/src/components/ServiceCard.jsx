@@ -27,10 +27,8 @@ const ServiceCard = ({ service, stats = null }) => {
     totalContainers: 1,
     runningContainers: container.status === 'running' ? 1 : 0,
     stoppedContainers: container.status !== 'running' ? 1 : 0,
-    averageCpu: stats && stats.length > 0 ? 
-      stats.reduce((sum, s) => sum + (s.cpu?.percent || 0), 0) / stats.length : 0,
-    totalMemory: stats && stats.length > 0 ? 
-      stats.reduce((sum, s) => sum + (s.memory?.usageMB || 0), 0) : 0,
+    averageCpu: stats?.cpu?.percent || 0,
+    totalMemory: stats?.memory?.usageMB || 0,
   };
 
   // Determinar cor do card baseado no status do container
