@@ -17,7 +17,11 @@ class AlertService {
     };
     
     this.alertHistory = new Map(); // Histórico de alertas para evitar spam
-    this.alertCooldown = 300000; // 5 minutos de cooldown entre alertas do mesmo tipo
+    this.alertCooldowns = {
+      resource: 300000,    // 5 minutos para alertas de recursos
+      health: 600000,      // 10 minutos para alertas de saúde
+      stopped: 7200000     // 2 horas para containers parados
+    };
   }
 
   /**
@@ -56,11 +60,13 @@ class AlertService {
   async sendResourceAlert(level, resource, containerId, containerName, currentValue, threshold) {
     const alertKey = `${containerId}_${resource}_${level}`;
     const now = Date.now();
+    const cooldown = this.alertCooldowns.resource;
     
     // Verificar cooldown
     if (this.alertHistory.has(alertKey)) {
       const lastAlert = this.alertHistory.get(alertKey);
-      if (now - lastAlert < this.alertCooldown) {
+      if (now - lastAlert < cooldown) {
+        console.log(`⏰ Cooldown ativo para alerta de ${resource} (${Math.round((cooldown - (now - lastAlert)) / 1000)}s restantes)`);
         return; // Ainda em cooldown
       }
     }
@@ -120,11 +126,13 @@ class AlertService {
   async sendHealthAlert(container) {
     const alertKey = `${container.id}_health`;
     const now = Date.now();
+    const cooldown = this.alertCooldowns.health;
     
     // Verificar cooldown
     if (this.alertHistory.has(alertKey)) {
       const lastAlert = this.alertHistory.get(alertKey);
-      if (now - lastAlert < this.alertCooldown) {
+      if (now - lastAlert < cooldown) {
+        console.log(`⏰ Cooldown ativo para alerta de saúde (${Math.round((cooldown - (now - lastAlert)) / 1000)}s restantes)`);
         return;
       }
     }
@@ -202,11 +210,13 @@ class AlertService {
   async sendStoppedContainerAlert(container, hoursStopped) {
     const alertKey = `${container.id}_stopped`;
     const now = Date.now();
+    const cooldown = this.alertCooldowns.stopped;
     
-    // Verificar cooldown (12 horas para containers parados)
+    // Verificar cooldown
     if (this.alertHistory.has(alertKey)) {
       const lastAlert = this.alertHistory.get(alertKey);
-      if (now - lastAlert < (12 * 60 * 60 * 1000)) {
+      if (now - lastAlert < cooldown) {
+        console.log(`⏰ Cooldown ativo para container parado (${Math.round((cooldown - (now - lastAlert)) / 1000 / 60)}min restantes)`);
         return;
       }
     }
