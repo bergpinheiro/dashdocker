@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  dashdocker:
+    image: dashdocker:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - WAHA_URL=${WAHA_URL}
+      - WAHA_TOKEN=${WAHA_TOKEN}
+      - WAHA_SESSION=${WAHA_SESSION}
+      - WAHA_PHONE=${WAHA_PHONE}
+      - NODE_ENV=production
+      - DASHBOARD_USERNAME=${DASHBOARD_USERNAME:-admin}
+      - DASHBOARD_PASSWORD=${DASHBOARD_PASSWORD:-admin123}
+    networks:
+      - dashdocker-network
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      placement:
+        constraints:
+          - node.role == manager
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 60s
+        max_failure_ratio: 0.3
+      rollback_config:
+        parallelism: 1
+        delay: 5s
+        monitor: 60s
+        max_failure_ratio: 0.3
+
+networks:
+  dashdocker-network:
+    driver: overlay
+    attachable: true
