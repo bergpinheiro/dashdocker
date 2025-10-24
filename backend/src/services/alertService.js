@@ -78,7 +78,7 @@ class AlertService {
     message += `*Uso Atual:* ${currentValue.toFixed(1)}${resourceUnit}\n`;
     message += `*Limite:* ${threshold}${resourceUnit}\n`;
     message += `*Nível:* ${level === 'critical' ? 'CRÍTICO' : 'AVISO'}\n`;
-    message += `*Horário:* ${new Date().toLocaleString('pt-BR')}\n\n`;
+    message += `*Horário:* ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}\n\n`;
     
     if (level === 'critical') {
       message += `🔥 *AÇÃO NECESSÁRIA:* Container pode falhar!\n`;
@@ -136,7 +136,7 @@ class AlertService {
     message += `*Status:* ${container.status}\n`;
     message += `*Saúde:* INSAUDÁVEL ❌\n`;
     message += `*Imagem:* ${container.image}\n`;
-    message += `*Horário:* ${new Date().toLocaleString('pt-BR')}\n\n`;
+    message += `*Horário:* ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}\n\n`;
     message += `🔍 *AÇÕES RECOMENDADAS:*\n`;
     message += `• Verificar logs do container\n`;
     message += `• Verificar health checks\n`;
@@ -161,9 +161,31 @@ class AlertService {
     );
     
     for (const container of stoppedContainers) {
-      const stoppedTime = new Date(container.stoppedAt || container.createdAt);
+      let stoppedTime;
+      
+      // Tentar extrair tempo do status do container
+      if (container.stoppedAt) {
+        const statusMatch = container.stoppedAt.match(/(\d+) seconds ago/);
+        if (statusMatch) {
+          const secondsAgo = parseInt(statusMatch[1]);
+          stoppedTime = new Date(Date.now() - (secondsAgo * 1000));
+          console.log(`🕐 Container ${container.name}: parado há ${secondsAgo} segundos (calculado do status)`);
+        } else {
+          // Se não conseguir extrair do status, usar createdAt
+          stoppedTime = new Date(container.createdAt);
+          console.log(`🕐 Container ${container.name}: usando createdAt como fallback`);
+        }
+      } else {
+        // Usar createdAt como fallback
+        stoppedTime = new Date(container.createdAt);
+        console.log(`🕐 Container ${container.name}: usando createdAt como fallback (sem stoppedAt)`);
+      }
+      
       const now = new Date();
       const hoursStopped = (now - stoppedTime) / (1000 * 60 * 60);
+      
+      console.log(`🕐 Container ${container.name}: parado há ${hoursStopped.toFixed(2)} horas`);
+      console.log(`🕐 Detalhes: stoppedAt="${container.stoppedAt}", createdAt="${container.createdAt}"`);
       
       // Alertar se parado há mais de 1 hora
       if (hoursStopped > 1) {
@@ -196,7 +218,7 @@ class AlertService {
     message += `*Status:* ${container.status}\n`;
     message += `*Tempo Parado:* ${hoursStopped.toFixed(1)} horas\n`;
     message += `*Imagem:* ${container.image}\n`;
-    message += `*Horário:* ${new Date().toLocaleString('pt-BR')}\n\n`;
+    message += `*Horário:* ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}\n\n`;
     message += `🔧 *AÇÕES RECOMENDADAS:*\n`;
     message += `• Verificar se deve estar rodando\n`;
     message += `• Reiniciar se necessário\n`;

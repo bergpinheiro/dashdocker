@@ -166,7 +166,8 @@ class DockerService {
         createdAt: container.Created,
         command: container.Command,
         labels: container.Labels || {},
-        stoppedAt: container.State === 'exited' ? container.Status : null
+        stoppedAt: container.State === 'exited' ? container.Status : null,
+        stateFinishedAt: container.State === 'exited' ? container.Status : null
       }));
     } catch (error) {
       console.error('Erro ao buscar containers do serviço:', error);

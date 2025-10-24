@@ -133,7 +133,7 @@ class EventService {
       let message = `🚨 *Alerta Docker*\n\n`;
       message += `*Container:* ${containerName || containerId}\n`;
       message += `*Ação:* ${action}\n`;
-      message += `*Horário:* ${new Date(timestamp).toLocaleString('pt-BR')}\n\n`;
+      message += `*Horário:* ${new Date(timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}\n\n`;
 
       // Adicionar contexto específico baseado na ação
       switch (action) {
