@@ -66,6 +66,11 @@ const ServiceDetail = ({ onLogout }) => {
 
   // Usar containers que vêm da API do serviço
   const serviceContainers = service?.containers || [];
+  
+  // Debug: Log dos containers
+  console.log('ServiceDetail - Containers do serviço:', serviceContainers);
+  console.log('ServiceDetail - Containers rodando:', serviceContainers.filter(c => c.status === 'running'));
+  console.log('ServiceDetail - Containers parados:', serviceContainers.filter(c => c.status === 'exited' || c.status === 'dead'));
 
   const handleViewLogs = (containerId, containerName) => {
     setSelectedContainer({ id: containerId, name: containerName });

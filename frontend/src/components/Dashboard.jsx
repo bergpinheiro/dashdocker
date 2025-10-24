@@ -28,13 +28,25 @@ const Dashboard = ({ onLogout, onShowAlerts }) => {
     }
   }, [servicesLastUpdate]);
 
-  // Agrupar stats por serviço (assumindo que o nome do container contém o nome do serviço)
+  // Agrupar stats por serviço (apenas para containers rodando)
   const getServiceStats = (service) => {
+    // Se o serviço tem containers definidos, usar apenas stats de containers rodando
+    if (service.containers && service.containers.length > 0) {
+      const runningContainerNames = service.containers
+        .filter(c => c.status === 'running')
+        .map(c => c.name);
+      
+      return stats.filter(stat => {
+        const containerName = stat.name || '';
+        return runningContainerNames.includes(containerName);
+      });
+    }
+    
+    // Fallback para lógica antiga se não houver containers no serviço
     return stats.filter(stat => {
       const containerName = stat.name || '';
       const serviceName = service.name || '';
       
-      // Verificar se o container pertence ao serviço
       return containerName.includes(serviceName) || 
              containerName.includes(serviceName.replace('_', '-')) ||
              containerName.includes(serviceName.replace('-', '_')) ||

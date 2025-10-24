@@ -15,15 +15,23 @@ const ServiceCard = ({ service, stats = null }) => {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
 
+  // Usar containers do serviço se disponível, senão usar stats
+  const containers = service.containers || [];
+  const hasContainers = containers.length > 0;
+  
   // Calcular estatísticas do serviço
-  const serviceStats = stats && stats.length > 0 ? {
-    totalContainers: stats.length,
-    runningContainers: stats.filter(s => s.status === 'running').length,
-    averageCpu: stats.reduce((sum, s) => sum + (s.cpu?.percent || 0), 0) / stats.length,
-    totalMemory: stats.reduce((sum, s) => sum + (s.memory?.usageMB || 0), 0),
+  const serviceStats = hasContainers ? {
+    totalContainers: containers.length,
+    runningContainers: containers.filter(c => c.status === 'running').length,
+    stoppedContainers: containers.filter(c => c.status === 'exited' || c.status === 'dead').length,
+    averageCpu: stats && stats.length > 0 ? 
+      stats.reduce((sum, s) => sum + (s.cpu?.percent || 0), 0) / stats.length : 0,
+    totalMemory: stats && stats.length > 0 ? 
+      stats.reduce((sum, s) => sum + (s.memory?.usageMB || 0), 0) : 0,
   } : {
     totalContainers: 0,
     runningContainers: 0,
+    stoppedContainers: 0,
     averageCpu: 0,
     totalMemory: 0,
   };
@@ -37,9 +45,18 @@ const ServiceCard = ({ service, stats = null }) => {
 
   // Determinar status geral
   const getOverallStatus = () => {
+    if (serviceStats.totalContainers === 0) return 'Sem containers';
     if (serviceStats.runningContainers === 0) return 'Parado';
     if (serviceStats.runningContainers < serviceStats.totalContainers) return 'Parcial';
     return 'Executando';
+  };
+
+  // Determinar cor do status
+  const getStatusColor = () => {
+    if (serviceStats.totalContainers === 0) return 'text-gray-400';
+    if (serviceStats.runningContainers === 0) return 'text-danger-400';
+    if (serviceStats.runningContainers < serviceStats.totalContainers) return 'text-warning-400';
+    return 'text-success-400';
   };
 
   const handleClick = () => {
@@ -67,8 +84,13 @@ const ServiceCard = ({ service, stats = null }) => {
               <h3 className="text-lg font-semibold text-white truncate">
                 {service.name}
               </h3>
-              <p className="text-sm text-gray-400">
+              <p className={`text-sm ${getStatusColor()}`}>
                 {getOverallStatus()} • {serviceStats.runningContainers}/{serviceStats.totalContainers} containers
+                {serviceStats.stoppedContainers > 0 && (
+                  <span className="text-danger-400 ml-1">
+                    ({serviceStats.stoppedContainers} parados)
+                  </span>
+                )}
               </p>
             </div>
           </div>

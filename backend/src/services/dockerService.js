@@ -120,11 +120,25 @@ class DockerService {
       
       console.log(`📦 Total de containers encontrados: ${containers.length}`);
       
+      // Log de todos os containers para debug
+      containers.forEach(container => {
+        const containerName = container.Names[0]?.replace('/', '') || '';
+        console.log(`📋 Container: ${containerName} | Status: ${container.State} | Image: ${container.Image}`);
+      });
+      
       const filteredContainers = containers.filter(container => {
         const containerName = container.Names[0]?.replace('/', '') || '';
-        const matches = containerName.includes(serviceName) || 
-               containerName.includes(serviceName.replace('_', '-')) ||
-               containerName.includes(serviceName.replace('-', '_'));
+        
+        // Múltiplas estratégias de matching
+        const matches = 
+          containerName.includes(serviceName) || 
+          containerName.includes(serviceName.replace('_', '-')) ||
+          containerName.includes(serviceName.replace('-', '_')) ||
+          containerName.startsWith(serviceName) ||
+          containerName.endsWith(serviceName) ||
+          // Verificar se o serviço está no nome do container (invertido)
+          serviceName.includes(containerName.split('_')[0]) ||
+          serviceName.includes(containerName.split('-')[0]);
         
         if (matches) {
           console.log(`✅ Container encontrado: ${containerName} (Status: ${container.State})`);
@@ -134,6 +148,12 @@ class DockerService {
       });
       
       console.log(`🎯 Containers filtrados para ${serviceName}: ${filteredContainers.length}`);
+      
+      // Log dos containers filtrados
+      filteredContainers.forEach(container => {
+        const containerName = container.Names[0]?.replace('/', '') || '';
+        console.log(`📌 Filtrado: ${containerName} | Status: ${container.State}`);
+      });
       
       return filteredContainers.map(container => ({
         id: container.Id,
@@ -145,7 +165,8 @@ class DockerService {
         ports: this.formatPorts(container.Ports),
         createdAt: container.Created,
         command: container.Command,
-        labels: container.Labels || {}
+        labels: container.Labels || {},
+        stoppedAt: container.State === 'exited' ? container.Status : null
       }));
     } catch (error) {
       console.error('Erro ao buscar containers do serviço:', error);
