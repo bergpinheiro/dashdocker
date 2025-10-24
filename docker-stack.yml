@@ -3,6 +3,7 @@ version: '3.8'
 services:
   dashdocker:
     image: dashdocker:latest
+    hostname: dashdocker
     ports:
       - "8080:3001"
     volumes:
