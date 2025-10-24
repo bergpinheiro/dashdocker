@@ -40,7 +40,7 @@ class DashDockerAgent {
     return new Promise((resolve, reject) => {
       console.log(`🔌 Conectando ao backend: ${this.backendUrl}`);
       
-      this.socket = io(this.backendUrl, {
+      this.socket = io(`${this.backendUrl}/agents`, {
         path: '/socket.io',
         transports: ['websocket'],
         timeout: 30000,

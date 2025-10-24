@@ -24,9 +24,8 @@ COPY --from=build /app/package*.json ./
 # Copiar código do agent
 COPY src/ ./src/
 
-# Healthcheck - verificar se consegue conectar ao Docker
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:2375/version || exit 1
+# Healthcheck removido - agent não expõe porta HTTP
+# Agent verifica conectividade via WebSocket com o backend
 
 # Comando de inicialização
 CMD ["node", "src/agent.js"]
