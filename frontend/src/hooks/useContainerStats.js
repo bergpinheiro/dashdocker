@@ -19,11 +19,13 @@ export const useContainerStats = () => {
     try {
       socketRef.current = io(API_URL, {
         transports: ['websocket', 'polling'],
-        timeout: 10000,
+        timeout: 5000, // Reduzido para 5s
         reconnection: true,
-        reconnectionDelay: 1000,
-        reconnectionAttempts: 5,
-        maxReconnectionAttempts: 5,
+        reconnectionDelay: 500, // Reduzido para 500ms
+        reconnectionAttempts: 10, // Aumentado para 10 tentativas
+        maxReconnectionAttempts: 10,
+        forceNew: true, // Força nova conexão
+        upgrade: true, // Permite upgrade de polling para websocket
       });
 
       socketRef.current.on('connect', () => {

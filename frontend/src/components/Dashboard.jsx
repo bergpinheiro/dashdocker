@@ -16,18 +16,16 @@ import {
 } from 'lucide-react';
 
 const Dashboard = ({ onLogout }) => {
-  const { services, loading: servicesLoading, error: servicesError, refetch: refetchServices } = useDockerServices();
+  const { services, loading: servicesLoading, error: servicesError, refetch: refetchServices, lastUpdate: servicesLastUpdate } = useDockerServices();
   const { stats, isConnected, error: statsError, getGeneralStats } = useContainerStats();
   const [lastUpdate, setLastUpdate] = useState(new Date());
 
-  // Atualizar timestamp a cada 5 segundos
+  // Atualizar timestamp quando os serviços forem atualizados
   useEffect(() => {
-    const interval = setInterval(() => {
-      setLastUpdate(new Date());
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
+    if (servicesLastUpdate) {
+      setLastUpdate(servicesLastUpdate);
+    }
+  }, [servicesLastUpdate]);
 
   // Agrupar stats por serviço (assumindo que o nome do container contém o nome do serviço)
   const getServiceStats = (service) => {

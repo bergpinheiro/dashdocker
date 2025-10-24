@@ -50,6 +50,13 @@ const ServiceDetail = ({ onLogout }) => {
 
     if (id) {
       fetchService();
+      
+      // Polling automático para atualizar dados do serviço a cada 10 segundos
+      const interval = setInterval(() => {
+        fetchService();
+      }, 10000);
+
+      return () => clearInterval(interval);
     }
   }, [id, getServiceById]);
 

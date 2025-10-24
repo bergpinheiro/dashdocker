@@ -2,19 +2,35 @@ const { docker } = require('../config/docker');
 const { calculateUptime, getStatusColor } = require('../utils/statsCalculator');
 
 /**
- * Serviço para interação com a API do Docker
+ * Serviço para interação com a API do Docker com cache
  */
 class DockerService {
+  constructor() {
+    this.cache = {
+      services: null,
+      timestamp: 0,
+      duration: 3000 // 3 segundos de cache
+    };
+  }
   
   /**
-   * Lista todos os serviços Docker
+   * Lista todos os serviços Docker com cache
    * @returns {Promise<Array>} Lista de serviços
    */
   async getServices() {
     try {
+      const now = Date.now();
+      
+      // Verificar cache
+      if (this.cache.services && (now - this.cache.timestamp) < this.cache.duration) {
+        console.log('📋 Retornando serviços do cache');
+        return this.cache.services;
+      }
+
+      console.log('📋 Buscando serviços do Docker...');
       const services = await docker.listServices();
       
-      return services.map(service => ({
+      const formattedServices = services.map(service => ({
         id: service.ID,
         name: service.Spec.Name,
         image: service.Spec.TaskTemplate.ContainerSpec.Image,
@@ -25,6 +41,13 @@ class DockerService {
         updatedAt: service.UpdatedAt,
         version: service.Version.Index
       }));
+
+      // Atualizar cache
+      this.cache.services = formattedServices;
+      this.cache.timestamp = now;
+
+      console.log(`✅ ${formattedServices.length} serviços encontrados`);
+      return formattedServices;
     } catch (error) {
       console.error('Erro ao listar serviços:', error);
       throw new Error('Falha ao obter serviços Docker');
