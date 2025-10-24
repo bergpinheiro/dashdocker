@@ -1,6 +1,5 @@
 const { docker } = require('../config/docker');
 const { calculateUptime, getStatusColor } = require('../utils/statsCalculator');
-const clusterService = require('./clusterService');
 
 /**
  * Serviço para interação com a API do Docker com cache
@@ -192,8 +191,8 @@ class DockerService {
    */
   async getContainers() {
     try {
-      // Usar clusterService para obter containers de todos os nodes
-      const containers = await clusterService.getAllContainersFromCluster();
+      // Obter containers locais
+      const containers = await docker.listContainers({ all: true });
       
       return containers.map(container => ({
         id: container.Id,
@@ -206,8 +205,8 @@ class DockerService {
         createdAt: container.Created,
         command: container.Command,
         labels: container.Labels || {},
-        nodeId: container.nodeId,
-        nodeName: container.nodeName,
+        nodeId: 'local',
+        nodeName: 'local',
         nodeRole: container.nodeRole
       }));
     } catch (error) {

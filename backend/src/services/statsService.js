@@ -1,7 +1,6 @@
 const { docker } = require('../config/docker');
 const { calculateCpuPercent, calculateMemoryUsage } = require('../utils/statsCalculator');
 const alertService = require('./alertService');
-const clusterService = require('./clusterService');
 
 /**
  * Serviço para coleta de estatísticas em tempo real
@@ -158,8 +157,48 @@ class StatsService {
    */
   async getAllContainersStats() {
     try {
-      // Usar clusterService para obter stats de todos os nodes
-      const stats = await clusterService.getAllStatsFromCluster();
+      // Obter containers locais
+      const containers = await docker.listContainers({ all: true });
+      const stats = [];
+      
+      for (const container of containers) {
+        try {
+          const containerObj = docker.getContainer(container.Id);
+          const containerStats = await containerObj.stats({ stream: false });
+          
+          const cpuDelta = containerStats.cpu_stats.cpu_usage.total_usage - 
+                          containerStats.precpu_stats.cpu_usage.total_usage;
+          const systemDelta = containerStats.cpu_stats.system_cpu_usage - 
+                             containerStats.precpu_stats.system_cpu_usage;
+          const cpuPercent = (cpuDelta / systemDelta) * 100.0;
+          
+          const memoryUsage = containerStats.memory_stats.usage || 0;
+          const memoryLimit = containerStats.memory_stats.limit || 0;
+          const memoryPercent = memoryLimit > 0 ? (memoryUsage / memoryLimit) * 100.0 : 0;
+          
+          stats.push({
+            id: container.Id,
+            name: container.Names[0]?.replace('/', '') || container.Id.substring(0, 12),
+            cpu: {
+              percent: Math.round(cpuPercent * 100) / 100,
+              usage: cpuDelta,
+              system: systemDelta
+            },
+            memory: {
+              percent: Math.round(memoryPercent * 100) / 100,
+              usage: memoryUsage,
+              limit: memoryLimit
+            },
+            network: {
+              rx_bytes: containerStats.networks?.eth0?.rx_bytes || 0,
+              tx_bytes: containerStats.networks?.eth0?.tx_bytes || 0
+            }
+          });
+        } catch (error) {
+          console.error(`Erro ao obter stats do container ${container.Id}:`, error.message);
+        }
+      }
+      
       return stats;
     } catch (error) {
       console.error('Erro ao obter stats do cluster:', error);
