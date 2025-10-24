@@ -18,7 +18,7 @@ import {
 
 const Dashboard = ({ onLogout, onShowAlerts }) => {
   const { services, loading: servicesLoading, error: servicesError, refetch: refetchServices, lastUpdate: servicesLastUpdate } = useDockerServices();
-  const { stats, isConnected, error: statsError, getGeneralStats } = useContainerStats();
+  const { stats, isConnected, error: statsError, isLoading: statsLoading, getGeneralStats } = useContainerStats();
   const [lastUpdate, setLastUpdate] = useState(new Date());
 
   // Atualizar timestamp quando os serviços forem atualizados
@@ -28,21 +28,36 @@ const Dashboard = ({ onLogout, onShowAlerts }) => {
     }
   }, [servicesLastUpdate]);
 
-  // Agrupar stats por serviço
+  // Agrupar stats por serviço (com fallback para dados estáticos)
   const getServiceStats = (service) => {
-    if (!stats || stats.length === 0) return [];
-    
     const serviceName = service.name || '';
     
-    return stats.filter(stat => {
-      const containerName = stat.name || '';
-      
-      // Estratégia simples de matching
-      return containerName.includes(serviceName) || 
-             serviceName.includes(containerName) ||
-             containerName.startsWith(serviceName) ||
-             containerName.endsWith(serviceName);
-    });
+    // Primeiro tentar dados em tempo real do WebSocket
+    if (stats && stats.length > 0) {
+      return stats.filter(stat => {
+        const containerName = stat.name || '';
+        
+        // Estratégia simples de matching
+        return containerName.includes(serviceName) || 
+               serviceName.includes(containerName) ||
+               containerName.startsWith(serviceName) ||
+               containerName.endsWith(serviceName);
+      });
+    }
+    
+    // Fallback: usar dados estáticos dos containers do serviço
+    if (service.containers && service.containers.length > 0) {
+      return service.containers.map(container => ({
+        containerId: container.id,
+        name: container.name,
+        status: container.status,
+        cpu: { percent: 0 }, // Placeholder até receber dados reais
+        memory: { usageMB: 0, percent: 0 }, // Placeholder até receber dados reais
+        timestamp: new Date().toISOString()
+      }));
+    }
+    
+    return [];
   };
 
   const generalStats = getGeneralStats();
@@ -221,7 +236,7 @@ const Dashboard = ({ onLogout, onShowAlerts }) => {
                 <div>
                   <p className="text-sm text-gray-400">CPU Médio</p>
                   <p className="text-2xl font-bold text-warning-500">
-                    {generalStats.averageCpu?.toFixed(1) || 0}%
+                    {statsLoading ? '...' : `${generalStats.averageCpu?.toFixed(1) || 0}%`}
                   </p>
                 </div>
                 <Activity className="w-8 h-8 text-warning-500" />

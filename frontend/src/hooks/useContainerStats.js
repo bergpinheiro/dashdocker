@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { io } from 'socket.io-client';
+import { apiEndpoints } from '../utils/api';
 
 /**
  * Hook para gerenciar estatísticas de containers em tempo real
@@ -8,8 +9,26 @@ export const useContainerStats = () => {
   const [stats, setStats] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const socketRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
+
+  // Carregar stats iniciais via HTTP
+  const loadInitialStats = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await apiEndpoints.containers.getAllStats();
+      if (response.data.success) {
+        setStats(response.data.data);
+        console.log('📊 Stats iniciais carregados:', response.data.data.length);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao carregar stats iniciais:', error);
+      setError('Falha ao carregar estatísticas iniciais');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   const connectSocket = useCallback(() => {
     if (socketRef.current?.connected) return;
@@ -91,12 +110,16 @@ export const useContainerStats = () => {
   }, []);
 
   useEffect(() => {
+    // Carregar stats iniciais primeiro
+    loadInitialStats();
+    
+    // Conectar WebSocket para updates em tempo real
     connectSocket();
 
     return () => {
       disconnectSocket();
     };
-  }, [connectSocket, disconnectSocket]);
+  }, [loadInitialStats, connectSocket, disconnectSocket]);
 
   // Função para obter stats de um container específico
   const getContainerStats = useCallback((containerId) => {
@@ -131,11 +154,13 @@ export const useContainerStats = () => {
     stats,
     isConnected,
     error,
+    isLoading,
     connectSocket,
     disconnectSocket,
     sendNotificationTest,
     getContainerStats,
     getStatsByStatus,
     getGeneralStats,
+    loadInitialStats,
   };
 };

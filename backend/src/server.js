@@ -91,15 +91,21 @@ app.get('*', (req, res) => {
 io.on('connection', (socket) => {
   console.log(`📱 Cliente conectado: ${socket.id}`);
   
-  // Enviar stats de todos os containers a cada 5 segundos
-  const statsInterval = setInterval(async () => {
+  // Enviar stats imediatamente quando conectar
+  const sendStats = async () => {
     try {
       const stats = await statsService.getAllContainersStats();
       socket.emit('stats', stats);
     } catch (error) {
       console.error('Erro ao enviar stats:', error);
     }
-  }, 5000);
+  };
+  
+  // Enviar dados imediatamente
+  sendStats();
+  
+  // Enviar stats de todos os containers a cada 2 segundos (mais rápido)
+  const statsInterval = setInterval(sendStats, 2000);
 
   // Enviar notificação de confirmação
   socket.on('notification:test', async (data) => {
