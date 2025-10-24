@@ -20,7 +20,7 @@ services:
       - NODE_ENV=production
       - DASHBOARD_USERNAME=${DASHBOARD_USERNAME:-admin}
       - DASHBOARD_PASSWORD=${DASHBOARD_PASSWORD:-admin123}
-      - VITE_API_URL=http://localhost:3001
+      - VITE_API_URL=
     networks:
       - dashdocker-network
     deploy:
