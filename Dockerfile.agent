@@ -1,0 +1,36 @@
+# Dockerfile para o agente DashDocker
+FROM node:18-alpine
+
+# Instalar dependências do sistema
+RUN apk add --no-cache wget
+
+# Criar diretório da aplicação
+WORKDIR /app
+
+# Copiar package.json
+COPY backend/package*.json ./
+
+# Instalar dependências
+RUN npm install --omit=dev && npm cache clean --force
+
+# Copiar código do agente
+COPY backend/src/agent.js ./
+COPY backend/src/utils ./utils
+
+# Criar usuário não-root
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S dashdocker -u 1001
+
+# Mudar propriedade dos arquivos
+RUN chown -R dashdocker:nodejs /app
+USER dashdocker
+
+# Expor porta do agente
+EXPOSE 3002
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3002/health || exit 1
+
+# Comando de inicialização
+CMD ["node", "agent.js"]

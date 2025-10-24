@@ -1,5 +1,7 @@
 const { docker } = require('../config/docker');
 const { calculateUptime, getStatusColor } = require('../utils/statsCalculator');
+const swarmService = require('./swarmService');
+const agentService = require('./agentService');
 
 /**
  * Serviço para interação com a API do Docker com cache
@@ -186,11 +188,37 @@ class DockerService {
   }
 
   /**
-   * Lista todos os containers
+   * Lista todos os containers (usando agentes se disponível)
    * @returns {Promise<Array>} Lista de containers
    */
   async getContainers() {
     try {
+      // Tentar usar agentes primeiro
+      if (await swarmService.isSwarmMode()) {
+        console.log('🐝 Modo Swarm detectado, tentando usar agentes...');
+        const agentContainers = await agentService.getAllContainersFromAgents();
+        
+        if (agentContainers.length > 0) {
+          console.log(`✅ ${agentContainers.length} containers obtidos via agentes`);
+          return agentContainers.map(container => ({
+            id: container.id,
+            name: container.name,
+            image: container.image,
+            status: container.status,
+            statusColor: getStatusColor(container.status),
+            uptime: calculateUptime(container),
+            ports: this.formatPorts(container.ports),
+            createdAt: container.createdAt,
+            command: container.command,
+            labels: container.labels || {},
+            nodeId: container.nodeId,
+            nodeName: container.nodeName
+          }));
+        }
+      }
+
+      // Fallback: usar API local
+      console.log('⚠️ Usando API local como fallback');
       const containers = await docker.listContainers({ all: true });
       
       return containers.map(container => ({
@@ -203,7 +231,9 @@ class DockerService {
         ports: this.formatPorts(container.Ports),
         createdAt: container.Created,
         command: container.Command,
-        labels: container.Labels || {}
+        labels: container.Labels || {},
+        nodeId: 'local',
+        nodeName: 'Local Node'
       }));
     } catch (error) {
       console.error('Erro ao listar containers:', error);
@@ -317,6 +347,66 @@ class DockerService {
         protocol: hostConfig?.HostIp || 'tcp'
       };
     });
+  }
+
+  /**
+   * Obtém informações do Swarm
+   * @returns {Promise<Object>} Informações do Swarm
+   */
+  async getSwarmInfo() {
+    try {
+      return await swarmService.getSwarmInfo();
+    } catch (error) {
+      console.error('Erro ao obter informações do Swarm:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Obtém lista de nodes do Swarm
+   * @returns {Promise<Array>} Lista de nodes
+   */
+  async getSwarmNodes() {
+    try {
+      return await swarmService.getNodes();
+    } catch (error) {
+      console.error('Erro ao obter nodes do Swarm:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Obtém estatísticas do Swarm
+   * @returns {Promise<Object>} Estatísticas do Swarm
+   */
+  async getSwarmStats() {
+    try {
+      return await swarmService.getSwarmStats();
+    } catch (error) {
+      console.error('Erro ao obter estatísticas do Swarm:', error);
+      return {
+        totalNodes: 0,
+        healthyNodes: 0,
+        unhealthyNodes: 0,
+        managerNodes: 0,
+        workerNodes: 0,
+        swarmMode: false,
+        lastUpdate: new Date().toISOString()
+      };
+    }
+  }
+
+  /**
+   * Verifica se está em modo Swarm
+   * @returns {Promise<boolean>} True se estiver em modo Swarm
+   */
+  async isSwarmMode() {
+    try {
+      return await swarmService.initialize();
+    } catch (error) {
+      console.error('Erro ao verificar modo Swarm:', error);
+      return false;
+    }
   }
 }
 

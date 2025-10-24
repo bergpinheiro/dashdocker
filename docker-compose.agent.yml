@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  dashdocker-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    image: dashdocker-agent:latest
+    ports:
+      - "3002:3002"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - NODE_ENV=production
+      - AGENT_PORT=3002
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    restart: unless-stopped
+    networks:
+      - dashdocker-network
+    deploy:
+      mode: global  # Roda em todos os nodes
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64M
+        reservations:
+          cpus: '0.05'
+          memory: 32M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+networks:
+  dashdocker-network:
+    driver: overlay
+    attachable: true

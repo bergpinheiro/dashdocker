@@ -1,6 +1,8 @@
 const { docker } = require('../config/docker');
 const { calculateCpuPercent, calculateMemoryUsage } = require('../utils/statsCalculator');
 const alertService = require('./alertService');
+const agentService = require('./agentService');
+const swarmService = require('./swarmService');
 
 /**
  * Serviço para coleta de estatísticas em tempo real
@@ -152,11 +154,28 @@ class StatsService {
   }
 
   /**
-   * Obtém stats de todos os containers ativos
+   * Obtém stats de todos os containers ativos (usando agentes se disponível)
    * @returns {Promise<Array>} Stats de todos os containers
    */
   async getAllContainersStats() {
     try {
+      // Tentar usar agentes primeiro
+      if (await swarmService.isSwarmMode()) {
+        console.log('🐝 Modo Swarm detectado, tentando usar agentes para stats...');
+        const agentStats = await agentService.getAllStatsFromAgents();
+        
+        if (agentStats.length > 0) {
+          console.log(`✅ ${agentStats.length} stats obtidos via agentes`);
+          return agentStats.map(stat => ({
+            ...stat,
+            network: stat.network || { rxBytes: 0, txBytes: 0, rxBytesFormatted: '0 B', txBytesFormatted: '0 B' },
+            blockIO: stat.blockIO || { readBytes: 0, writeBytes: 0, readBytesFormatted: '0 B', writeBytesFormatted: '0 B' }
+          }));
+        }
+      }
+
+      // Fallback: usar API local
+      console.log('⚠️ Usando API local para stats como fallback');
       const containers = await docker.listContainers();
       const statsPromises = containers.map(async (container) => {
         try {
@@ -174,7 +193,9 @@ class StatsService {
             memory: calculateMemoryUsage(stats),
             network: this.calculateNetworkStats(stats),
             blockIO: this.calculateBlockIOStats(stats),
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            nodeId: 'local',
+            nodeName: 'Local Node'
           };
         } catch (error) {
           console.error(`Erro ao obter stats do container ${container.Id}:`, error);
