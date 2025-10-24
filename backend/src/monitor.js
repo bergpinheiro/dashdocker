@@ -23,8 +23,14 @@ class MonitorMode {
     console.log('🔍 Iniciando modo monitor...');
     this.isRunning = true;
 
-    // Descobrir nodes do cluster
-    await clusterService.discoverNodes();
+    // Tentar descobrir nodes do cluster (pode falhar em workers)
+    try {
+      await clusterService.discoverNodes();
+      console.log('✅ Nodes do cluster descobertos');
+    } catch (error) {
+      console.log('⚠️ Não foi possível descobrir nodes (provavelmente worker node):', error.message);
+      console.log('📊 Continuando com monitoramento local...');
+    }
 
     // Iniciar coleta periódica de dados
     this.startDataCollection();
@@ -41,20 +47,36 @@ class MonitorMode {
       try {
         console.log('📊 Coletando dados do cluster...');
         
-        // Descobrir nodes
-        await clusterService.discoverNodes();
+        // Tentar descobrir nodes (pode falhar em workers)
+        try {
+          await clusterService.discoverNodes();
+        } catch (error) {
+          console.log('⚠️ Não foi possível descobrir nodes (worker node)');
+        }
         
-        // Coletar containers
-        const containers = await clusterService.getAllContainersFromCluster();
-        console.log(`📦 ${containers.length} containers encontrados`);
+        // Coletar containers (sempre funciona)
+        try {
+          const containers = await clusterService.getAllContainersFromCluster();
+          console.log(`📦 ${containers.length} containers encontrados`);
+        } catch (error) {
+          console.log('⚠️ Erro ao coletar containers:', error.message);
+        }
         
-        // Coletar stats
-        const stats = await clusterService.getAllStatsFromCluster();
-        console.log(`📈 ${stats.length} stats coletados`);
+        // Coletar stats (sempre funciona)
+        try {
+          const stats = await clusterService.getAllStatsFromCluster();
+          console.log(`📈 ${stats.length} stats coletados`);
+        } catch (error) {
+          console.log('⚠️ Erro ao coletar stats:', error.message);
+        }
         
-        // Coletar estatísticas do cluster
-        const clusterStats = await clusterService.getClusterStats();
-        console.log(`🐝 Cluster: ${clusterStats.totalNodes} nodes, ${clusterStats.totalContainers} containers`);
+        // Coletar estatísticas do cluster (pode falhar em workers)
+        try {
+          const clusterStats = await clusterService.getClusterStats();
+          console.log(`🐝 Cluster: ${clusterStats.totalNodes} nodes, ${clusterStats.totalContainers} containers`);
+        } catch (error) {
+          console.log('⚠️ Erro ao coletar stats do cluster (worker node)');
+        }
         
       } catch (error) {
         console.error('❌ Erro na coleta de dados:', error);

@@ -52,7 +52,7 @@ services:
         monitor: 60s
         max_failure_ratio: 0.3
 
-  # Monitor de cluster (apenas managers)
+  # Monitor de cluster (todos os nodes)
   dashdocker-monitor:
     image: dashdocker:latest
     build:
@@ -67,7 +67,7 @@ services:
     networks:
       - dashdocker-network
     deploy:
-      replicas: 0  # Desabilitado por enquanto
+      mode: global  # Roda em TODOS os nodes
       resources:
         limits:
           cpus: '0.1'
@@ -80,9 +80,6 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
-      placement:
-        constraints:
-          - node.role == manager
 
 networks:
   dashdocker-network:
