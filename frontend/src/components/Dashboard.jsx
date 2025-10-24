@@ -28,29 +28,20 @@ const Dashboard = ({ onLogout, onShowAlerts }) => {
     }
   }, [servicesLastUpdate]);
 
-  // Agrupar stats por serviço (apenas para containers rodando)
+  // Agrupar stats por serviço
   const getServiceStats = (service) => {
-    // Se o serviço tem containers definidos, usar apenas stats de containers rodando
-    if (service.containers && service.containers.length > 0) {
-      const runningContainerNames = service.containers
-        .filter(c => c.status === 'running')
-        .map(c => c.name);
-      
-      return stats.filter(stat => {
-        const containerName = stat.name || '';
-        return runningContainerNames.includes(containerName);
-      });
-    }
+    if (!stats || stats.length === 0) return [];
     
-    // Fallback para lógica antiga se não houver containers no serviço
+    const serviceName = service.name || '';
+    
     return stats.filter(stat => {
       const containerName = stat.name || '';
-      const serviceName = service.name || '';
       
+      // Estratégia simples de matching
       return containerName.includes(serviceName) || 
-             containerName.includes(serviceName.replace('_', '-')) ||
-             containerName.includes(serviceName.replace('-', '_')) ||
-             serviceName.includes(containerName);
+             serviceName.includes(containerName) ||
+             containerName.startsWith(serviceName) ||
+             containerName.endsWith(serviceName);
     });
   };
 

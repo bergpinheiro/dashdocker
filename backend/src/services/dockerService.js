@@ -129,32 +129,15 @@ class DockerService {
       const filteredContainers = containers.filter(container => {
         const containerName = container.Names[0]?.replace('/', '') || '';
         
-        // Estratégias de matching mais flexíveis
-        const serviceNameClean = serviceName.replace(/[_-]/g, '');
-        const containerNameClean = containerName.replace(/[_-]/g, '');
-        
+        // Estratégia simples e eficaz
         const matches = 
-          // Match exato
-          containerName === serviceName ||
-          // Container contém o nome do serviço
-          containerName.includes(serviceName) ||
-          // Serviço contém o nome do container
+          containerName.includes(serviceName) || 
           serviceName.includes(containerName) ||
-          // Match com caracteres especiais removidos
-          containerNameClean.includes(serviceNameClean) ||
-          serviceNameClean.includes(containerNameClean) ||
-          // Match por prefixo
           containerName.startsWith(serviceName) ||
-          serviceName.startsWith(containerName) ||
-          // Match por sufixo
           containerName.endsWith(serviceName) ||
-          serviceName.endsWith(containerName) ||
-          // Match por partes (split por _ ou -)
-          containerName.split(/[_-]/).some(part => serviceName.includes(part)) ||
-          serviceName.split(/[_-]/).some(part => containerName.includes(part)) ||
-          // Docker Swarm: container pode ter formato service_name.task_id
+          // Docker Swarm: service_name.task_id
           containerName.includes(`${serviceName}.`) ||
-          // Docker Swarm: container pode ter formato stack_service.task_id
+          // Docker Swarm: stack_service.task_id  
           containerName.includes(`_${serviceName}.`) ||
           containerName.includes(`-${serviceName}.`);
         

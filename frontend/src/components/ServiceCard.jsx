@@ -20,21 +20,38 @@ const ServiceCard = ({ service, stats = null }) => {
   const hasContainers = containers.length > 0;
   
   // Calcular estatísticas do serviço
-  const serviceStats = hasContainers ? {
-    totalContainers: containers.length,
-    runningContainers: containers.filter(c => c.status === 'running').length,
-    stoppedContainers: containers.filter(c => c.status === 'exited' || c.status === 'dead').length,
-    averageCpu: stats && stats.length > 0 ? 
-      stats.reduce((sum, s) => sum + (s.cpu?.percent || 0), 0) / stats.length : 0,
-    totalMemory: stats && stats.length > 0 ? 
-      stats.reduce((sum, s) => sum + (s.memory?.usageMB || 0), 0) : 0,
-  } : {
-    totalContainers: 0,
-    runningContainers: 0,
-    stoppedContainers: 0,
-    averageCpu: 0,
-    totalMemory: 0,
-  };
+  let serviceStats;
+  
+  if (hasContainers) {
+    // Usar containers do serviço
+    serviceStats = {
+      totalContainers: containers.length,
+      runningContainers: containers.filter(c => c.status === 'running').length,
+      stoppedContainers: containers.filter(c => c.status === 'exited' || c.status === 'dead').length,
+      averageCpu: stats && stats.length > 0 ? 
+        stats.reduce((sum, s) => sum + (s.cpu?.percent || 0), 0) / stats.length : 0,
+      totalMemory: stats && stats.length > 0 ? 
+        stats.reduce((sum, s) => sum + (s.memory?.usageMB || 0), 0) : 0,
+    };
+  } else if (stats && stats.length > 0) {
+    // Fallback: usar stats se não houver containers
+    serviceStats = {
+      totalContainers: stats.length,
+      runningContainers: stats.filter(s => s.status === 'running').length,
+      stoppedContainers: stats.filter(s => s.status === 'exited' || s.status === 'dead').length,
+      averageCpu: stats.reduce((sum, s) => sum + (s.cpu?.percent || 0), 0) / stats.length,
+      totalMemory: stats.reduce((sum, s) => sum + (s.memory?.usageMB || 0), 0),
+    };
+  } else {
+    // Sem dados
+    serviceStats = {
+      totalContainers: 0,
+      runningContainers: 0,
+      stoppedContainers: 0,
+      averageCpu: 0,
+      totalMemory: 0,
+    };
+  }
 
   // Determinar cor do card baseado no status
   const getCardColor = () => {
