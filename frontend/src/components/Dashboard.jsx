@@ -29,10 +29,16 @@ const Dashboard = ({ onLogout }) => {
 
   // Agrupar stats por serviço (assumindo que o nome do container contém o nome do serviço)
   const getServiceStats = (service) => {
-    return stats.filter(stat => 
-      stat.name.includes(service.name) || 
-      service.name.includes(stat.name)
-    );
+    return stats.filter(stat => {
+      const containerName = stat.name || '';
+      const serviceName = service.name || '';
+      
+      // Verificar se o container pertence ao serviço
+      return containerName.includes(serviceName) || 
+             containerName.includes(serviceName.replace('_', '-')) ||
+             containerName.includes(serviceName.replace('-', '_')) ||
+             serviceName.includes(containerName);
+    });
   };
 
   const generalStats = getGeneralStats();

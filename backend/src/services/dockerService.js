@@ -55,13 +55,17 @@ class DockerService {
   }
 
   /**
-   * Obtém detalhes de um serviço específico
+   * Obtém detalhes de um serviço específico com containers
    * @param {string} serviceId - ID do serviço
    * @returns {Promise<Object>} Detalhes do serviço
    */
   async getServiceById(serviceId) {
     try {
       const service = await docker.getService(serviceId).inspect();
+      
+      // Buscar containers relacionados ao serviço
+      const containers = await this.getContainersByService(service.Spec.Name);
+      
       return {
         id: service.ID,
         name: service.Spec.Name,
@@ -72,11 +76,57 @@ class DockerService {
         labels: service.Spec.Labels || {},
         createdAt: service.CreatedAt,
         updatedAt: service.UpdatedAt,
-        version: service.Version.Index
+        version: service.Version.Index,
+        containers: containers
       };
     } catch (error) {
       console.error('Erro ao obter serviço:', error);
       throw new Error('Serviço não encontrado');
+    }
+  }
+
+  /**
+   * Busca containers relacionados a um serviço
+   * @param {string} serviceName - Nome do serviço
+   * @returns {Promise<Array>} Lista de containers
+   */
+  async getContainersByService(serviceName) {
+    try {
+      console.log(`🔍 Buscando containers para serviço: ${serviceName}`);
+      const containers = await docker.listContainers({ all: true });
+      
+      console.log(`📦 Total de containers encontrados: ${containers.length}`);
+      
+      const filteredContainers = containers.filter(container => {
+        const containerName = container.Names[0]?.replace('/', '') || '';
+        const matches = containerName.includes(serviceName) || 
+               containerName.includes(serviceName.replace('_', '-')) ||
+               containerName.includes(serviceName.replace('-', '_'));
+        
+        if (matches) {
+          console.log(`✅ Container encontrado: ${containerName} (Status: ${container.State})`);
+        }
+        
+        return matches;
+      });
+      
+      console.log(`🎯 Containers filtrados para ${serviceName}: ${filteredContainers.length}`);
+      
+      return filteredContainers.map(container => ({
+        id: container.Id,
+        name: container.Names[0]?.replace('/', '') || 'sem-nome',
+        image: container.Image,
+        status: container.State,
+        statusColor: getStatusColor(container.State),
+        uptime: calculateUptime(container),
+        ports: this.formatPorts(container.Ports),
+        createdAt: container.Created,
+        command: container.Command,
+        labels: container.Labels || {}
+      }));
+    } catch (error) {
+      console.error('Erro ao buscar containers do serviço:', error);
+      return [];
     }
   }
 

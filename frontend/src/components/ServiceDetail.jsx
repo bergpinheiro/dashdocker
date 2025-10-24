@@ -60,11 +60,8 @@ const ServiceDetail = ({ onLogout }) => {
     }
   }, [id, getServiceById]);
 
-  // Obter containers relacionados ao serviço
-  const serviceContainers = stats.filter(stat => 
-    stat.name.includes(service?.name || '') || 
-    (service?.name && stat.name.includes(service.name))
-  );
+  // Usar containers que vêm da API do serviço
+  const serviceContainers = service?.containers || [];
 
   const handleViewLogs = (containerId, containerName) => {
     setSelectedContainer({ id: containerId, name: containerName });
