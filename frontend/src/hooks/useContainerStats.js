@@ -123,6 +123,7 @@ export const useContainerStats = () => {
       totalContainers,
       runningContainers,
       stoppedContainers,
+      averageCpu: totalContainers > 0 ? totalCpuUsage / totalContainers : 0,
       averageCpuUsage: totalContainers > 0 ? totalCpuUsage / totalContainers : 0,
       totalMemoryUsage,
     };

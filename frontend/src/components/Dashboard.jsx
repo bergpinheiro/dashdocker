@@ -121,7 +121,7 @@ const Dashboard = ({ onLogout }) => {
                 <div className="flex items-center gap-2">
                   <Activity className="w-4 h-4 text-primary-400" />
                   <span className="text-gray-300">
-                    {generalStats.averageCpu.toFixed(1)}% CPU médio
+                    {generalStats.averageCpu?.toFixed(1) || 0}% CPU médio
                   </span>
                 </div>
               </div>
@@ -206,7 +206,7 @@ const Dashboard = ({ onLogout }) => {
                 <div>
                   <p className="text-sm text-gray-400">CPU Médio</p>
                   <p className="text-2xl font-bold text-warning-500">
-                    {generalStats.averageCpu.toFixed(1)}%
+                    {generalStats.averageCpu?.toFixed(1) || 0}%
                   </p>
                 </div>
                 <Activity className="w-8 h-8 text-warning-500" />

@@ -25,7 +25,7 @@ export const formatBytes = (bytes) => {
  */
 export const formatPercent = (value, decimals = 1) => {
   if (isNaN(value) || value === null || value === undefined) return '0%';
-  return `${Number(value).toFixed(decimals)}%`;
+  return `${Number(value || 0).toFixed(decimals)}%`;
 };
 
 /**

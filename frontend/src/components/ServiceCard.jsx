@@ -16,10 +16,10 @@ const ServiceCard = ({ service, stats = null }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   // Calcular estatísticas do serviço
-  const serviceStats = stats ? {
+  const serviceStats = stats && stats.length > 0 ? {
     totalContainers: stats.length,
     runningContainers: stats.filter(s => s.status === 'running').length,
-    averageCpu: stats.reduce((sum, s) => sum + (s.cpu?.percent || 0), 0) / stats.length || 0,
+    averageCpu: stats.reduce((sum, s) => sum + (s.cpu?.percent || 0), 0) / stats.length,
     totalMemory: stats.reduce((sum, s) => sum + (s.memory?.usageMB || 0), 0),
   } : {
     totalContainers: 0,
@@ -124,7 +124,7 @@ const ServiceCard = ({ service, stats = null }) => {
                 <div>
                   <p className="text-xs text-gray-400">CPU Médio</p>
                   <p className="text-sm font-medium text-white">
-                    {serviceStats.averageCpu.toFixed(1)}%
+                    {serviceStats.averageCpu?.toFixed(1) || 0}%
                   </p>
                 </div>
               </div>
@@ -133,7 +133,7 @@ const ServiceCard = ({ service, stats = null }) => {
                 <div>
                   <p className="text-xs text-gray-400">Memória Total</p>
                   <p className="text-sm font-medium text-white">
-                    {serviceStats.totalMemory.toFixed(1)} MB
+                    {serviceStats.totalMemory?.toFixed(1) || 0} MB
                   </p>
                 </div>
               </div>
