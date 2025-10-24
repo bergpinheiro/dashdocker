@@ -4,6 +4,9 @@ services:
   # Dashboard principal (apenas no manager)
   dashdocker:
     image: dashdocker:latest
+    build:
+      context: .
+      target: dashboard
     hostname: dashdocker
     ports:
       - "8080:3001"
@@ -51,6 +54,9 @@ services:
   # Agente distribuído (todos os nodes)
   dashdocker-agent:
     image: dashdocker-agent:latest
+    build:
+      context: .
+      target: agent
     ports:
       - "3002:3002"
     volumes:
